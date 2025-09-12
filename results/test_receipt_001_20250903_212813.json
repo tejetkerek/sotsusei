@@ -1,0 +1,77 @@
+{
+  "receipt_id": "test_receipt_001",
+  "phases": {
+    "image_processing": {
+      "name": "画像処理フェーズ",
+      "steps": {
+        "load_receipt_image": {
+          "status": "success",
+          "data": {
+            "image_loaded": true
+          }
+        },
+        "extract_text": {
+          "status": "success",
+          "data": {
+            "extracted_text": "McDonald's Bangkok\n123 Sukhumvit Road\nBangkok, Thailand\n\nBig Mac Meal\n$8.50\nTax: $0.85\nTotal: $9.35\n\nThank you for visiting!",
+            "text_length": 124,
+            "confidence": "dummy",
+            "is_dummy": true,
+            "message": "ダミーテキストを使用しています"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "translation": {
+      "name": "翻訳フェーズ",
+      "steps": {
+        "detect_language": {
+          "status": "success",
+          "data": {
+            "detected_language": "en"
+          }
+        },
+        "translate_text": {
+          "status": "success",
+          "data": {
+            "translated_text": "マクドナルド バンコク店\n123 Sukhumvit Road\nBangkok, Thailand\n\nビッグマックセット\n$8.50（約8.50×150円）\n税金: $0.85（約0.85×150円）\n合計: $9.35（約9.35×150円）\n\nご来店ありがとうございました！"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "currency_conversion": {
+      "name": "通貨換算フェーズ",
+      "steps": {
+        "extract_amount": {
+          "status": "success",
+          "data": {
+            "amounts": []
+          }
+        },
+        "detect_currency": {
+          "status": "success",
+          "data": {
+            "currencies": [
+              "USD"
+            ]
+          }
+        },
+        "convert_currency": {
+          "status": "success",
+          "data": {
+            "conversions": []
+          }
+        }
+      },
+      "status": "completed"
+    }
+  },
+  "metadata": {
+    "processed_at": "2025-09-03T21:28:13.122689",
+    "project_name": "海外支出ガイド MVP",
+    "project_version": "1.0.0",
+    "receipt_id": "test_receipt_001"
+  }
+}

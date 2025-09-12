@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海外支出ガイド - レシート取り込み</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#667eea',
+                        'secondary': '#764ba2',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-base-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <!-- ヘッダー -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-base-content mb-2">翻訳は自動判定</h1>
+            <p class="text-sm text-base-content/70">レシートを撮影して自動で翻訳・換算します</p>
+        </div>
+
+        <!-- プレビューエリア -->
+        <div class="flex gap-4 mb-8">
+            <div class="flex-1 bg-base-200 rounded-lg h-32 flex items-center justify-center">
+                <span class="text-base-content/50 text-sm">元画像</span>
+            </div>
+            <div class="flex-1 bg-primary/10 rounded-lg h-32 flex items-center justify-center">
+                <span class="text-primary font-medium text-sm">プレビューが表示</span>
+            </div>
+            <div class="flex-1 bg-base-200 rounded-lg h-32 flex items-center justify-center">
+                <span class="text-base-content/50 text-sm">翻訳後</span>
+            </div>
+        </div>
+
+        <!-- アクションボタン -->
+        <div class="space-y-4 mb-8">
+            <button class="btn btn-primary btn-block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                取り込むみたいなボタン
+            </button>
+            
+            <button class="btn btn-outline btn-block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+                通貨指定ボタン?
+            </button>
+        </div>
+
+        <!-- GOボタン -->
+        <button class="btn btn-secondary btn-block btn-lg text-lg font-bold">
+            GO!
+        </button>
+
+        <!-- プロジェクトタイムライン -->
+        <div class="mt-12 bg-base-200 rounded-lg p-4">
+            <h3 class="text-lg font-semibold mb-4 text-center">プロジェクトスケジュール</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="space-y-2">
+                    <div class="font-medium">9/4~9/11</div>
+                    <div class="text-base-content/70">見てくれの整備</div>
+                    
+                    <div class="font-medium">9/18~9/25</div>
+                    <div class="text-base-content/70">3画面目までコンプリート</div>
+                    
+                    <div class="font-medium">9/25~10/2</div>
+                    <div class="text-base-content/70">思い出と認証に挑戦</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="font-medium">9/11~9/18</div>
+                    <div class="text-base-content/70">写真取り込んでGOして</div>
+                    <div class="text-base-content/70">2画面目にいって表示がされる</div>
+                    <div class="text-primary font-medium">(Gemini API登場)</div>
+                    
+                    <div class="font-medium">10/2~10/6</div>
+                    <div class="text-base-content/70">最終調整とデプロイ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

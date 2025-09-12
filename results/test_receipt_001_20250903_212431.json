@@ -1,0 +1,77 @@
+{
+  "receipt_id": "test_receipt_001",
+  "phases": {
+    "image_processing": {
+      "name": "画像処理フェーズ",
+      "steps": {
+        "load_receipt_image": {
+          "status": "success",
+          "data": {
+            "image_loaded": true
+          }
+        },
+        "extract_text": {
+          "status": "success",
+          "data": {
+            "extracted_text": "7-Eleven\n789 Ratchadamri Road\nBangkok, Thailand\n\nWater Bottle\n฿15\nChips\n฿25\nTotal: ฿40\n\nThank you!",
+            "text_length": 98,
+            "confidence": "dummy",
+            "is_dummy": true,
+            "message": "ダミーテキストを使用しています"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "translation": {
+      "name": "翻訳フェーズ",
+      "steps": {
+        "detect_language": {
+          "status": "success",
+          "data": {
+            "detected_language": "th"
+          }
+        },
+        "translate_text": {
+          "status": "success",
+          "data": {
+            "translated_text": "7-Eleven\n789 Ratchadamri Road\nBangkok, Thailand\n\n水のボトル\n฿15（約15×4.2円）\nポテトチップス\n฿25（約25×4.2円）\n合計: ฿40（約40×4.2円）\n\nありがとうございます！"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "currency_conversion": {
+      "name": "通貨換算フェーズ",
+      "steps": {
+        "extract_amount": {
+          "status": "success",
+          "data": {
+            "amounts": []
+          }
+        },
+        "detect_currency": {
+          "status": "success",
+          "data": {
+            "currencies": [
+              "THB"
+            ]
+          }
+        },
+        "convert_currency": {
+          "status": "success",
+          "data": {
+            "conversions": []
+          }
+        }
+      },
+      "status": "completed"
+    }
+  },
+  "metadata": {
+    "processed_at": "2025-09-03T21:24:31.090385",
+    "project_name": "海外支出ガイド MVP",
+    "project_version": "1.0.0",
+    "receipt_id": "test_receipt_001"
+  }
+}

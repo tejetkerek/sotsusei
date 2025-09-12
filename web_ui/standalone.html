@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海外支出ガイド MVP - 結果表示</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🌍 海外支出ガイド MVP</h1>
+            <p class="subtitle">レシート処理結果</p>
+        </header>
+
+        <div class="content">
+            <!-- レシート情報 -->
+            <section class="receipt-info">
+                <h2>📄 レシート情報</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>レシートID:</label>
+                        <span>test_receipt_001</span>
+                    </div>
+                    <div class="info-item">
+                        <label>処理日時:</label>
+                        <span>2025/09/03 21:32:15</span>
+                    </div>
+                    <div class="info-item">
+                        <label>ステータス:</label>
+                        <span class="status-badge completed">completed</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 抽出されたテキスト -->
+            <section class="extracted-text">
+                <h2>📝 抽出されたテキスト</h2>
+                <div class="text-box">
+                    <h3>原文</h3>
+                    <pre>RED ELEPHANT
+123 Jalan Bukit Bintang
+Kuala Lumpur, Malaysia
+
+Kao Mun Gai Chicken White Rice
+RM 15.90
+
+Tax: RM 0.00
+Total: RM 15.90
+
+Thank you for your visit!
+Date: 2024-01-15
+Time: 14:30</pre>
+                </div>
+                <div class="text-box">
+                    <h3>翻訳後</h3>
+                    <pre>RED ELEPHANT
+123 Jalan Bukit Bintang
+Kuala Lumpur, Malaysia
+
+Kao Mun Gai Chicken White Rice
+RM 15.90
+
+税金: RM 0.00
+合計: RM 15.90
+
+Thank you for your visit!
+Date: 2024-01-15
+Time: 14:30</pre>
+                </div>
+            </section>
+
+            <!-- 通貨換算結果 -->
+            <section class="currency-conversion">
+                <h2>💰 通貨換算結果</h2>
+                <div class="conversion-summary">
+                    <div class="total-amount">
+                        <h3>合計金額</h3>
+                        <div class="amount-display">
+                            <span class="jpy-amount">509</span>
+                            <span class="currency-label">日本円</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conversion-details">
+                    <h3>詳細</h3>
+                    <div class="conversion-list">
+                        <div class="conversion-item">
+                            <div class="amount">
+                                15.90 MYR
+                                <br>
+                                <small>→ 508.8 円</small>
+                            </div>
+                            <div class="currency">
+                                レート: 32.0
+                                <br>
+                                <small>2025/09/03 21:54:39</small>
+                            </div>
+                            <div class="context">
+                                Chicken White Rice RM 15.90 Tax: RM 0.00 Total
+                            </div>
+                        </div>
+                        <div class="conversion-item">
+                            <div class="amount">
+                                0.00 MYR
+                                <br>
+                                <small>→ 0.00 円</small>
+                            </div>
+                            <div class="currency">
+                                レート: 0.0285
+                                <br>
+                                <small>2025/09/03 21:32:15</small>
+                            </div>
+                            <div class="context">
+                                Rice RM 15.90 Tax: RM 0.00 Total: RM 15.90
+                            </div>
+                        </div>
+                        <div class="conversion-item">
+                            <div class="amount">
+                                15.90 MYR
+                                <br>
+                                <small>→ 0.45 円</small>
+                            </div>
+                            <div class="currency">
+                                レート: 0.0285
+                                <br>
+                                <small>2025/09/03 21:32:15</small>
+                            </div>
+                            <div class="context">
+                                Tax: RM 0.00 Total: RM 15.90 Thank you for your
+                            </div>
+                        </div>
+                        <div class="conversion-item">
+                            <div class="amount">
+                                15.90 MYR
+                                <br>
+                                <small>→ 0.45 円</small>
+                            </div>
+                            <div class="currency">
+                                レート: 0.0285
+                                <br>
+                                <small>2025/09/03 21:32:15</small>
+                            </div>
+                            <div class="context">
+                                15.90 Tax: RM 0.00 Total: RM 15.90 Thank you for your
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 処理フェーズ -->
+            <section class="processing-phases">
+                <h2>⚙️ 処理フェーズ</h2>
+                <div class="phases-list">
+                    <div class="phase-item">
+                        <div class="phase-header">
+                            <div class="phase-name">画像処理フェーズ</div>
+                            <div class="phase-status completed">completed</div>
+                        </div>
+                        <div class="phase-stats">
+                            ステップ: 2/2 (成功率: 100%)
+                        </div>
+                    </div>
+                    <div class="phase-item">
+                        <div class="phase-header">
+                            <div class="phase-name">翻訳フェーズ</div>
+                            <div class="phase-status completed">completed</div>
+                        </div>
+                        <div class="phase-stats">
+                            ステップ: 2/2 (成功率: 100%)
+                        </div>
+                    </div>
+                    <div class="phase-item">
+                        <div class="phase-header">
+                            <div class="phase-name">通貨換算フェーズ</div>
+                            <div class="phase-status completed">completed</div>
+                        </div>
+                        <div class="phase-stats">
+                            ステップ: 3/3 (成功率: 100%)
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

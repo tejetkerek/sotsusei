@@ -1,0 +1,143 @@
+{
+  "receipt_id": "test_receipt_001",
+  "phases": {
+    "image_processing": {
+      "name": "画像処理フェーズ",
+      "steps": {
+        "load_receipt_image": {
+          "status": "success",
+          "data": {
+            "image_loaded": true
+          }
+        },
+        "extract_text": {
+          "status": "success",
+          "data": {
+            "extracted_text": "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30",
+            "text_length": 186,
+            "confidence": "dummy",
+            "is_dummy": true,
+            "message": "RED ELEPHANTレシートのダミーテキストを使用しています"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "translation": {
+      "name": "翻訳フェーズ",
+      "steps": {
+        "detect_language": {
+          "status": "success",
+          "data": {
+            "detected_language": "en"
+          }
+        },
+        "translate_text": {
+          "status": "success",
+          "data": {
+            "translated_text": "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\n税金: RM 0.00\n合計: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "currency_conversion": {
+      "name": "通貨換算フェーズ",
+      "steps": {
+        "extract_amount": {
+          "status": "success",
+          "data": {
+            "amounts": [
+              {
+                "amount": 15.9,
+                "currency": "MYR",
+                "symbol": "RM",
+                "position": 92,
+                "context": " Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal",
+                "pattern_used": 0
+              },
+              {
+                "amount": 0.0,
+                "currency": "MYR",
+                "symbol": "RM",
+                "position": 107,
+                "context": "Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nTh",
+                "pattern_used": 0
+              },
+              {
+                "amount": 15.9,
+                "currency": "MYR",
+                "symbol": "RM",
+                "position": 122,
+                "context": "Tax: RM 0.00\nTotal: RM 15.90\n\nThank you for your",
+                "pattern_used": 0
+              },
+              {
+                "amount": 15.9,
+                "currency": "MYR",
+                "symbol": "RM",
+                "position": 115,
+                "context": "15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your",
+                "pattern_used": 4
+              }
+            ]
+          }
+        },
+        "detect_currency": {
+          "status": "success",
+          "data": {
+            "currencies": [
+              "MYR"
+            ]
+          }
+        },
+        "convert_currency": {
+          "status": "success",
+          "data": {
+            "conversions": [
+              {
+                "original_amount": 15.9,
+                "original_currency": "MYR",
+                "jpy_amount": 508.8,
+                "exchange_rate": 32.0,
+                "conversion_date": "2025-09-03T21:51:07.009978",
+                "context": " Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal"
+              },
+              {
+                "original_amount": 0.0,
+                "original_currency": "MYR",
+                "jpy_amount": 0.0,
+                "exchange_rate": 32.0,
+                "conversion_date": "2025-09-03T21:51:07.009991",
+                "context": "Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nTh"
+              },
+              {
+                "original_amount": 15.9,
+                "original_currency": "MYR",
+                "jpy_amount": 508.8,
+                "exchange_rate": 32.0,
+                "conversion_date": "2025-09-03T21:51:07.009994",
+                "context": "Tax: RM 0.00\nTotal: RM 15.90\n\nThank you for your"
+              },
+              {
+                "original_amount": 15.9,
+                "original_currency": "MYR",
+                "jpy_amount": 508.8,
+                "exchange_rate": 32.0,
+                "conversion_date": "2025-09-03T21:51:07.009996",
+                "context": "15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your"
+              }
+            ]
+          }
+        }
+      },
+      "status": "completed"
+    }
+  },
+  "metadata": {
+    "processed_at": "2025-09-03T21:51:07.010500",
+    "project_name": "海外支出ガイド MVP",
+    "project_version": "1.0.0",
+    "receipt_id": "test_receipt_001"
+  }
+}

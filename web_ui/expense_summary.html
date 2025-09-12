@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海外支出ガイド - 支出サマリー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#667eea',
+                        'secondary': '#764ba2',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-base-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <!-- ヘッダー -->
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-base-content mb-2">支出サマリー</h1>
+            <p class="text-sm text-base-content/70">マレーシア旅行の支出記録</p>
+        </div>
+
+        <!-- グラフエリア -->
+        <div class="bg-base-200 rounded-lg h-48 mb-6 flex items-center justify-center">
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span class="text-base-content/50 text-sm">グラフ?</span>
+            </div>
+        </div>
+
+        <!-- 支出リスト -->
+        <div class="card bg-base-100 shadow-sm border border-base-300 mb-6">
+            <div class="card-body p-4">
+                <h3 class="card-title text-lg mb-4">支出詳細</h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="badge badge-success">食費</div>
+                            <span class="text-sm">コーヒー豆</span>
+                        </div>
+                        <span class="font-medium">1200円</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="badge badge-success">食費</div>
+                            <span class="text-sm">チキンライス</span>
+                        </div>
+                        <span class="font-medium">1500円</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="badge badge-warning">おみやげ</div>
+                            <span class="text-sm">おかし</span>
+                        </div>
+                        <span class="font-medium">500円</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="badge badge-success">食費</div>
+                            <span class="text-sm">チキンライス</span>
+                        </div>
+                        <span class="font-medium">1500円</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- アクションボタン -->
+        <div class="space-y-4 mb-8">
+            <button class="btn btn-outline btn-block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                エクスポート
+            </button>
+            
+            <button class="btn btn-primary btn-block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                保存
+            </button>
+        </div>
+
+        <!-- 合計金額 -->
+        <div class="stats shadow mb-6">
+            <div class="stat">
+                <div class="stat-title">合計支出</div>
+                <div class="stat-value text-primary">4,700円</div>
+                <div class="stat-desc">マレーシア・リンギット換算</div>
+            </div>
+        </div>
+
+        <!-- 完了ボタン -->
+        <button class="btn btn-secondary btn-block btn-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            終了
+        </button>
+
+        <!-- フッターメモ -->
+        <div class="mt-8 text-center text-xs text-base-content/50 space-y-1">
+            <div>認証への事実上の導線</div>
+            <div>思い出への導線にもなる</div>
+        </div>
+    </div>
+</body>
+</html>

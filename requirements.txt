@@ -1,0 +1,29 @@
+# Google API関連
+google-cloud-translate>=3.11.0
+google-cloud-vision>=3.4.0
+google-generativeai>=0.3.0
+
+# YAML設定ファイル
+PyYAML>=6.0.0
+
+# HTTP リクエスト
+requests>=2.31.0
+
+# 画像処理
+Pillow>=10.0.0
+
+# 正規表現・テキスト処理
+regex>=2023.8.0
+
+# 環境変数管理
+python-dotenv>=1.0.0
+
+# ログ出力
+colorlog>=6.7.0
+
+# データ処理
+pandas>=2.0.0
+
+# テスト
+pytest>=7.4.0
+pytest-mock>=3.11.0

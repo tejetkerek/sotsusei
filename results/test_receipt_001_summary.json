@@ -1,0 +1,65 @@
+{
+  "receipt_id": "test_receipt_001",
+  "processed_at": "2025-09-03T21:56:31.061838",
+  "status": "completed",
+  "phases": {
+    "image_processing": {
+      "name": "画像処理フェーズ",
+      "status": "completed",
+      "step_count": 2,
+      "success_count": 2
+    },
+    "translation": {
+      "name": "翻訳フェーズ",
+      "status": "completed",
+      "step_count": 2,
+      "success_count": 2
+    },
+    "currency_conversion": {
+      "name": "通貨換算フェーズ",
+      "status": "completed",
+      "step_count": 3,
+      "success_count": 3
+    }
+  },
+  "extracted_data": {
+    "detected_language": "en",
+    "translated_text": "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\n税金: RM 0.00\n合計: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30",
+    "conversions": [
+      {
+        "original_amount": 15.9,
+        "original_currency": "MYR",
+        "jpy_amount": 508.8,
+        "exchange_rate": 32.0,
+        "conversion_date": "2025-09-03T21:56:31.058255",
+        "context": " Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal"
+      },
+      {
+        "original_amount": 0.0,
+        "original_currency": "MYR",
+        "jpy_amount": 0.0,
+        "exchange_rate": 32.0,
+        "conversion_date": "2025-09-03T21:56:31.058269",
+        "context": "Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nTh"
+      },
+      {
+        "original_amount": 15.9,
+        "original_currency": "MYR",
+        "jpy_amount": 508.8,
+        "exchange_rate": 32.0,
+        "conversion_date": "2025-09-03T21:56:31.058274",
+        "context": "Tax: RM 0.00\nTotal: RM 15.90\n\nThank you for your"
+      },
+      {
+        "original_amount": 15.9,
+        "original_currency": "MYR",
+        "jpy_amount": 508.8,
+        "exchange_rate": 32.0,
+        "conversion_date": "2025-09-03T21:56:31.058276",
+        "context": "15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your"
+      }
+    ],
+    "total_jpy": 508.8,
+    "original_text": "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30"
+  }
+}

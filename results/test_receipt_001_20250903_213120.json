@@ -1,0 +1,223 @@
+{
+  "receipt_id": "test_receipt_001",
+  "phases": {
+    "image_processing": {
+      "name": "画像処理フェーズ",
+      "steps": {
+        "load_receipt_image": {
+          "status": "success",
+          "data": {
+            "image_loaded": true
+          }
+        },
+        "extract_text": {
+          "status": "success",
+          "data": {
+            "extracted_text": "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30",
+            "text_length": 186,
+            "confidence": "dummy",
+            "is_dummy": true,
+            "message": "RED ELEPHANTレシートのダミーテキストを使用しています"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "translation": {
+      "name": "翻訳フェーズ",
+      "steps": {
+        "detect_language": {
+          "status": "success",
+          "data": {
+            "detected_language": "en"
+          }
+        },
+        "translate_text": {
+          "status": "success",
+          "data": {
+            "translated_text": "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\n税金: RM 0.00\n合計: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30"
+          }
+        }
+      },
+      "status": "completed"
+    },
+    "currency_conversion": {
+      "name": "通貨換算フェーズ",
+      "steps": {
+        "extract_amount": {
+          "status": "success",
+          "data": {
+            "amounts": [
+              {
+                "amount": 123.0,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 13,
+                "context": "RED ELEPHANT\n123 Jalan Bukit Bintang",
+                "pattern_used": 0
+              },
+              {
+                "amount": 15.9,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 95,
+                "context": "icken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal",
+                "pattern_used": 0
+              },
+              {
+                "amount": 0.0,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 110,
+                "context": "e\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nTh",
+                "pattern_used": 0
+              },
+              {
+                "amount": 15.9,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 125,
+                "context": ": RM 0.00\nTotal: RM 15.90\n\nThank you for your",
+                "pattern_used": 0
+              },
+              {
+                "amount": 2024.0,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 164,
+                "context": "r your visit!\nDate: 2024-01-15\nTime: 14:30",
+                "pattern_used": 0
+              },
+              {
+                "amount": 1.0,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 169,
+                "context": "r visit!\nDate: 2024-01-15\nTime: 14:30",
+                "pattern_used": 0
+              },
+              {
+                "amount": 15.0,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 172,
+                "context": "isit!\nDate: 2024-01-15\nTime: 14:30",
+                "pattern_used": 0
+              },
+              {
+                "amount": 14.0,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 181,
+                "context": "e: 2024-01-15\nTime: 14:30",
+                "pattern_used": 0
+              },
+              {
+                "amount": 30.0,
+                "currency": "UNKNOWN",
+                "symbol": null,
+                "position": 184,
+                "context": "2024-01-15\nTime: 14:30",
+                "pattern_used": 0
+              }
+            ]
+          }
+        },
+        "detect_currency": {
+          "status": "success",
+          "data": {
+            "currencies": [
+              "MYR"
+            ]
+          }
+        },
+        "convert_currency": {
+          "status": "success",
+          "data": {
+            "conversions": [
+              {
+                "original_amount": 123.0,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 123.0,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072418",
+                "context": "RED ELEPHANT\n123 Jalan Bukit Bintang"
+              },
+              {
+                "original_amount": 15.9,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 15.9,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072443",
+                "context": "icken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal"
+              },
+              {
+                "original_amount": 0.0,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 0.0,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072454",
+                "context": "e\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nTh"
+              },
+              {
+                "original_amount": 15.9,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 15.9,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072461",
+                "context": ": RM 0.00\nTotal: RM 15.90\n\nThank you for your"
+              },
+              {
+                "original_amount": 2024.0,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 2024.0,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072467",
+                "context": "r your visit!\nDate: 2024-01-15\nTime: 14:30"
+              },
+              {
+                "original_amount": 1.0,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 1.0,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072474",
+                "context": "r visit!\nDate: 2024-01-15\nTime: 14:30"
+              },
+              {
+                "original_amount": 15.0,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 15.0,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072480",
+                "context": "isit!\nDate: 2024-01-15\nTime: 14:30"
+              },
+              {
+                "original_amount": 14.0,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 14.0,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072486",
+                "context": "e: 2024-01-15\nTime: 14:30"
+              },
+              {
+                "original_amount": 30.0,
+                "original_currency": "UNKNOWN",
+                "jpy_amount": 30.0,
+                "exchange_rate": 1.0,
+                "conversion_date": "2025-09-03T21:31:20.072492",
+                "context": "2024-01-15\nTime: 14:30"
+              }
+            ]
+          }
+        }
+      },
+      "status": "completed"
+    }
+  },
+  "metadata": {
+    "processed_at": "2025-09-03T21:31:20.073497",
+    "project_name": "海外支出ガイド MVP",
+    "project_version": "1.0.0",
+    "receipt_id": "test_receipt_001"
+  }
+}

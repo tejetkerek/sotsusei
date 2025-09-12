@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海外支出ガイド MVP - 結果表示</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🌍 海外支出ガイド MVP</h1>
+            <p class="subtitle">レシート処理結果</p>
+        </header>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>結果を読み込み中...</p>
+        </div>
+
+        <div class="content" id="content" style="display: none;">
+            <!-- レシート情報 -->
+            <section class="receipt-info">
+                <h2>📄 レシート情報</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>レシートID:</label>
+                        <span id="receipt-id">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>処理日時:</label>
+                        <span id="processed-at">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>ステータス:</label>
+                        <span id="status" class="status-badge">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 抽出されたテキスト -->
+            <section class="extracted-text">
+                <h2>📝 抽出されたテキスト</h2>
+                <div class="text-box">
+                    <h3>原文</h3>
+                    <pre id="original-text">-</pre>
+                </div>
+                <div class="text-box">
+                    <h3>翻訳後</h3>
+                    <pre id="translated-text">-</pre>
+                </div>
+            </section>
+
+            <!-- 通貨換算結果 -->
+            <section class="currency-conversion">
+                <h2>💰 通貨換算結果</h2>
+                <div class="conversion-summary">
+                    <div class="total-amount">
+                        <h3>合計金額</h3>
+                        <div class="amount-display">
+                            <span id="total-jpy" class="jpy-amount">-</span>
+                            <span class="currency-label">日本円</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conversion-details">
+                    <h3>詳細</h3>
+                    <div id="conversion-list" class="conversion-list">
+                        <!-- 動的に生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 処理フェーズ -->
+            <section class="processing-phases">
+                <h2>⚙️ 処理フェーズ</h2>
+                <div id="phases-list" class="phases-list">
+                    <!-- 動的に生成 -->
+                </div>
+            </section>
+        </div>
+
+        <div class="error" id="error" style="display: none;">
+            <h2>❌ エラー</h2>
+            <p id="error-message">結果の読み込みに失敗しました。</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

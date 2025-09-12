@@ -1,0 +1,92 @@
+# MVP機能確認システム設定
+project:
+  name: "海外支出ガイド MVP"
+  version: "1.0.0"
+  description: "レシート画像認識・翻訳・通貨換算機能確認"
+
+# Google API設定
+google_apis:
+  translation:
+    enabled: true
+    api_key_env: "GOOGLE_TRANSLATE_API_KEY"
+    target_language: "ja"
+    source_languages: ["en", "th", "kr", "cn"]
+  
+  vision:
+    enabled: true
+    api_key_env: "GOOGLE_VISION_API_KEY"
+    features: ["TEXT_DETECTION", "DOCUMENT_TEXT_DETECTION"]
+  
+  gemini:
+    enabled: true
+    api_key_env: "GOOGLE_GEMINI_API_KEY"
+    model: "gemini-pro"
+
+# 通貨換算設定
+currency:
+  enabled: true
+  base_currency: "JPY"
+  target_currencies: ["USD", "EUR", "THB", "KRW", "CNY", "MYR"]
+  api_url: "https://api.exchangerate-api.com/v4/latest/"
+  fallback_rates:
+    USD: 150.0
+    EUR: 160.0
+    THB: 4.2
+    KRW: 0.11
+    CNY: 20.8
+    MYR: 32.0
+
+# 処理フロー設定
+processing_flow:
+  - phase: "image_processing"
+    name: "画像処理フェーズ"
+    steps:
+      - step: "load_receipt_image"
+        action: "load_image"
+        target_file_pattern: "receipts/{{receipt_id}}.jpg"
+        explanation: "レシート画像を読み込みます"
+      
+      - step: "extract_text"
+        action: "ocr_extraction"
+        service: "google_vision"
+        explanation: "画像からテキストを抽出します"
+  
+  - phase: "translation"
+    name: "翻訳フェーズ"
+    steps:
+      - step: "detect_language"
+        action: "language_detection"
+        service: "google_translate"
+        explanation: "テキストの言語を検出します"
+      
+      - step: "translate_text"
+        action: "translate"
+        service: "google_translate"
+        target_language: "ja"
+        explanation: "テキストを日本語に翻訳します"
+  
+  - phase: "currency_conversion"
+    name: "通貨換算フェーズ"
+    steps:
+      - step: "extract_amount"
+        action: "amount_extraction"
+        pattern: "\\d+(\\.\\d{2})?"
+        explanation: "金額を抽出します"
+      
+      - step: "detect_currency"
+        action: "currency_detection"
+        symbols: ["$", "€", "฿", "₩", "¥", "元", "RM"]
+        explanation: "通貨記号から通貨を検出します"
+      
+      - step: "convert_currency"
+        action: "currency_conversion"
+        service: "exchange_rate_api"
+        explanation: "日本円に換算します"
+
+# 出力設定
+output:
+  format: "json"
+  save_results: true
+  output_dir: "results/"
+  include_original: true
+  include_processed: true
