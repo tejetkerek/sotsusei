@@ -23,129 +23,84 @@
     <div class="container mx-auto px-4 py-8 max-w-md">
         <!-- ヘッダー -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-primary mb-2">🌍 海外支出ガイド</h1>
-            <p class="text-sm text-base-content/70">新UIデザイン デモ</p>
+            <h1 class="text-3xl font-bold text-gray-800 mb-3">海外レシート管理マスター</h1>
+            <p class="text-base font-medium text-gray-600">レシートでカンタン、海外旅行の旅費管理</p>
         </div>
 
-        <!-- 新UI画面一覧 -->
-        <div class="space-y-4 mb-8">
-            <h2 class="text-xl font-semibold mb-4">新UIデザイン</h2>
-            
-            <a href="registration_step1.html" class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-shadow">
-                <div class="card-body">
-                    <div class="flex items-center gap-4">
-                        <div class="avatar">
-                            <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="card-title text-lg">登録 (1/3)</h3>
-                            <p class="text-sm text-base-content/70">領収書の登録・通貨指定</p>
-                        </div>
-                        <div class="badge badge-primary">1</div>
-                    </div>
-                </div>
+        <!-- 開発メニュー -->
+        <div class="mb-6">
+            <a href="dev_menu.html" class="btn btn-outline btn-primary w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                開発メニュー（全画面一覧）
             </a>
+        </div>
 
-            <a href="registration_step2.html" class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-shadow">
+        <!-- 画面一覧 -->
+        <div class="space-y-4 mb-8">
+            
+           <a href="registration_step1.html" class="card bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+               <div class="card-body">
+                   <div class="flex items-center gap-4">
+                       <div class="avatar">
+                           <div class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                               </svg>
+                           </div>
+                       </div>
+                       <div class="badge bg-blue-100 text-blue-800 border-0">1</div>
+                       <div class="flex-1">
+                           <h3 class="card-title text-lg text-gray-800">ステップ1/3：登録</h3>
+                           <p class="text-sm text-gray-600">通貨指定・レシートの取り込み</p>
+                       </div>
+                   </div>
+               </div>
+           </a>
+           
+
+            <a href="registration_step2.html" class="card bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                 <div class="card-body">
                     <div class="flex items-center gap-4">
                         <div class="avatar">
-                            <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div class="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </div>
                         </div>
+                        <div class="badge bg-green-100 text-green-800 border-0">2</div>
                         <div class="flex-1">
-                            <h3 class="card-title text-lg">登録・修正 (2/3)</h3>
-                            <p class="text-sm text-base-content/70">店舗情報・商品一覧の編集</p>
+                            <h3 class="card-title text-lg text-gray-800">ステップ2/3：確認&修正</h3>
+                            <p class="text-sm text-gray-600">店舗情報・商品一覧の編集</p>
                         </div>
-                        <div class="badge badge-secondary">2</div>
                     </div>
                 </div>
             </a>
 
-            <a href="registration_step3.html" class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-shadow">
+            <a href="registration_step3.html" class="card bg-white shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                 <div class="card-body">
                     <div class="flex items-center gap-4">
                         <div class="avatar">
-                            <div class="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div class="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
                             </div>
                         </div>
+                        <div class="badge bg-orange-100 text-orange-800 border-0">3</div>
                         <div class="flex-1">
-                            <h3 class="card-title text-lg">サマリー (3/3)</h3>
-                            <p class="text-sm text-base-content/70">登録完了・支出サマリー</p>
+                            <h3 class="card-title text-lg text-gray-800">ステップ3/3：サマリー</h3>
+                            <p class="text-sm text-gray-600">登録完了・支出サマリー</p>
                         </div>
-                        <div class="badge badge-success">3</div>
                     </div>
                 </div>
             </a>
         </div>
 
-        <!-- 旧UI画面一覧 -->
-        <div class="space-y-4">
-            <h2 class="text-xl font-semibold mb-4">旧UIデザイン</h2>
-            
-            <a href="receipt_capture.html" class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-shadow opacity-70">
-                <div class="card-body">
-                    <div class="flex items-center gap-4">
-                        <div class="avatar">
-                            <div class="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="card-title text-lg">レシート取り込み</h3>
-                            <p class="text-sm text-base-content/70">翻訳は自動判定</p>
-                        </div>
-                        <div class="badge badge-accent">旧</div>
-                    </div>
-                </div>
-            </a>
-
-            <a href="standalone.html" class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-shadow opacity-70">
-                <div class="card-body">
-                    <div class="flex items-center gap-4">
-                        <div class="avatar">
-                            <div class="w-12 h-12 rounded-lg bg-info/10 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="card-title text-lg">結果表示</h3>
-                            <p class="text-sm text-base-content/70">MVP結果</p>
-                        </div>
-                        <div class="badge badge-info">MVP</div>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- 技術情報 -->
-        <div class="mt-8 card bg-base-200">
-            <div class="card-body p-4">
-                <h3 class="card-title text-sm mb-2">使用技術</h3>
-                <div class="flex flex-wrap gap-2">
-                    <div class="badge badge-outline">daisyUI</div>
-                    <div class="badge badge-outline">Tailwind CSS</div>
-                    <div class="badge badge-outline">HTML5</div>
-                    <div class="badge badge-outline">Responsive</div>
-                </div>
-            </div>
-        </div>
     </div>
 </body>
 </html>

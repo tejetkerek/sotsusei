@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>海外支出ガイド - 登録・修正 (2/3)</title>
+    <title>海外レシート管理マスター - ステップ2/3：確認&修正</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary': '#667eea',
-                        'secondary': '#764ba2',
+                        'custom-blue': '#3B82F6',
+                        'custom-gray': '#6B7280'
                     }
                 }
             }
@@ -20,141 +20,124 @@
     </script>
 </head>
 <body class="bg-base-100 min-h-screen">
-    <div class="min-h-screen bg-base-100">
-        <!-- ステータスバー -->
-        <div class="bg-primary text-primary-content px-4 py-2 text-center text-sm">
-            <span class="font-medium">海外支出ガイド</span>
+    <div class="min-h-screen bg-gray-100 flex">
+        <!-- 左端の開発中リスト -->
+        <div class="bg-yellow-100 border-r border-yellow-300 p-2 w-20 flex flex-col items-center">
+            <div class="text-xs text-gray-700 space-y-2">
+                <a href="registration_step1.html" class="block text-blue-600 hover:underline writing-vertical-rl">1.登録</a>
+                <a href="registration_step2.html" class="block text-gray-500 writing-vertical-rl">2.確認</a>
+                <a href="registration_step3.html" class="block text-blue-600 hover:underline writing-vertical-rl">3.サマリ</a>
+                <a href="registration_signup.html" class="block text-blue-600 hover:underline writing-vertical-rl">4.会員</a>
+                <a href="registration_memories.html" class="block text-blue-600 hover:underline writing-vertical-rl">5.想い出</a>
+            </div>
         </div>
         
-        <div class="px-4 py-6">
+        <div class="flex-1 flex justify-center">
+            <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
+            <!-- ステータスバー -->
+            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm">
+                <span class="font-medium">海外レシート管理マスター</span>
+            </div>
+            
+            <div class="px-4 py-6">
             <!-- ヘッダー -->
             <div class="text-center mb-6">
-                <h1 class="text-xl font-bold text-base-content">登録・修正 (2/3)</h1>
+                <h1 class="text-xl font-bold text-gray-800">確認</h1>
                 <!-- プログレスバー -->
-                <div class="w-full bg-base-200 rounded-full h-2 mt-3">
-                    <div class="bg-primary h-2 rounded-full" style="width: 66%"></div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 66%"></div>
                 </div>
             </div>
 
-            <!-- アップロードされた領収書 -->
-            <div class="bg-base-100 rounded-lg shadow-sm border border-base-300 mb-4">
+            <!-- レシート一覧 -->
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold mb-3 text-gray-800">登録レシート一覧 (3件中 1件目)</h2>
+                
+                <!-- レシート番号表示 -->
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm text-gray-600">処理済み: 0件</span>
+                    <span class="text-sm text-gray-600">残り: 3件</span>
+                </div>
+            </div>
+            
+            <!-- 現在のレシート -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
                 <div class="p-4">
-                    <h2 class="text-lg font-semibold mb-3">アップロードされた領収書</h2>
-                    
-                    <div class="border-2 border-dashed border-base-300 rounded-lg h-32 flex items-center justify-center bg-base-50">
-                        <span class="text-base-content/50 text-xs">領収書画像</span>
-                    </div>
-                </div>
-            </div>
-
-        <!-- 店舗情報 -->
-        <div class="card bg-base-100 shadow-sm border border-base-300 mb-6">
-            <div class="card-body">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="card-title text-lg">店舗情報</h2>
-                    <button class="btn btn-ghost btn-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="space-y-3">
-                    <div class="form-control">
-                        <input type="text" placeholder="○○ストア" class="input input-bordered w-full" />
-                    </div>
-                    <div class="form-control">
-                        <input type="date" value="2024-12-10" class="input input-bordered w-full" />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 商品一覧 -->
-        <div class="card bg-base-100 shadow-sm border border-base-300 mb-6">
-            <div class="card-body">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="card-title text-lg">商品一覧</h2>
-                    <button class="btn btn-primary btn-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="space-y-3">
-                    <!-- 商品1 -->
-                    <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                        <div class="flex-1">
-                            <div class="font-medium">コーヒー豆 ¥1,200</div>
-                            <div class="text-sm text-base-content/70">
-                                <span class="badge badge-success badge-sm">食費</span>
+                    <!-- 現在のレシート -->
+                    <div class="border border-gray-200 rounded-lg p-3 mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-blue-600">現在処理中</span>
+                            <span class="text-xs text-gray-500">1/3</span>
+                        </div>
+                        
+                        <!-- プレビューエリア -->
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg h-32 mb-3 flex items-center justify-center bg-gray-50">
+                            <div class="text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <span class="text-gray-500 text-xs">RED ELEPHANT</span>
                             </div>
                         </div>
-                        <div class="flex gap-2">
-                            <button class="btn btn-ghost btn-xs">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
-                            <button class="btn btn-ghost btn-xs text-error">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
+                        
+                        <!-- レシート情報表示 -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">店舗名:</span>
+                                <span class="font-medium text-gray-800">RED ELEPHANT</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">内容:</span>
+                                <span class="font-medium text-gray-800">カレーライス × 2</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">金額:</span>
+                                <span class="font-medium text-gray-800">RM 15.90</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">日本円換算:</span>
+                                <span class="font-medium text-blue-600">¥ 520</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">カテゴリ:</span>
+                                <select class="select select-bordered select-xs border-gray-300 w-20 text-xs">
+                                    <option value="food" selected>食費</option>
+                                    <option value="transport">交通費</option>
+                                    <option value="shopping">お買い物</option>
+                                    <option value="entertainment">娯楽</option>
+                                    <option value="other">その他</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- 商品2 -->
-                    <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                        <div class="flex-1">
-                            <div class="font-medium">チキンライス ¥1,500</div>
-                            <div class="text-sm text-base-content/70">
-                                <span class="badge badge-success badge-sm">食費</span>
-                            </div>
+                    <!-- 次のレシートプレビュー -->
+                    <div class="border border-gray-100 rounded-lg p-2 bg-gray-50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500">次のレシート</span>
+                            <span class="text-xs text-gray-500">2/3</span>
                         </div>
-                        <div class="flex gap-2">
-                            <button class="btn btn-ghost btn-xs">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
-                            <button class="btn btn-ghost btn-xs text-error">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
+                        <div class="border border-gray-200 rounded h-16 flex items-center justify-center bg-white">
+                            <span class="text-xs text-gray-400">レシート画像プレビュー</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 合計金額 -->
-        <div class="card bg-base-100 shadow-sm border border-base-300 mb-6">
-            <div class="card-body">
-                <div class="flex justify-between items-center">
-                    <span class="text-lg font-medium">合計金額</span>
-                    <span class="text-2xl font-bold text-primary">¥2,700</span>
-                </div>
-            </div>
-        </div>
-
-            <!-- アクションボタン -->
-            <div class="space-y-3 pb-20">
-                <button class="btn btn-outline btn-block btn-sm">
+            <!-- 登録ボタン -->
+            <div class="mt-6 pb-4">
+                <button class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block border-0">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    下書き保存
+                    確認完了
                 </button>
-                
-                <button class="btn btn-success btn-block btn-lg fixed bottom-4 left-4 right-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                    確定して次へ
-                </button>
+            </div>
+            </div>
             </div>
         </div>
     </div>
