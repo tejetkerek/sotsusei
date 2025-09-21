@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase シンプルテスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">Firebase シンプルテスト</h1>
+        
+        <!-- Firebase接続テスト -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">Firebase接続テスト</h2>
+            <button id="testConnectionBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Firebase接続テスト
+            </button>
+            <div id="connectionResult" class="mt-4 p-3 bg-gray-100 rounded hidden">
+                <p id="connectionText"></p>
+            </div>
+        </div>
+
+        <!-- Firestoreテスト -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">Firestoreテスト</h2>
+            <button id="testFirestoreBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                Firestore書き込みテスト
+            </button>
+            <div id="firestoreResult" class="mt-4 p-3 bg-gray-100 rounded hidden">
+                <p id="firestoreText"></p>
+            </div>
+        </div>
+
+        <!-- データ読み込みテスト -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">データ読み込みテスト</h2>
+            <button id="testReadBtn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                データ読み込みテスト
+            </button>
+            <div id="readResult" class="mt-4 p-3 bg-gray-100 rounded hidden">
+                <p id="readText"></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase設定
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+        import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzZk0qF1tBl4Pb_mhsjsU6m7dw1QoT3mM",
+            authDomain: "sotsusei-new.firebaseapp.com",
+            projectId: "sotsusei-new",
+            storageBucket: "sotsusei-new.firebasestorage.app",
+            messagingSenderId: "1091798051561",
+            appId: "1:1091798051561:web:a4e3e4268fe0d175b5de78"
+        };
+
+        // Firebase初期化
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 結果表示関数
+        function showResult(elementId, textId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            const text = document.getElementById(textId);
+            
+            text.textContent = message;
+            element.classList.remove('hidden');
+            
+            if (isError) {
+                element.className = 'mt-4 p-3 bg-red-100 text-red-700 rounded';
+            } else {
+                element.className = 'mt-4 p-3 bg-green-100 text-green-700 rounded';
+            }
+        }
+
+        // Firebase接続テスト
+        document.getElementById('testConnectionBtn').addEventListener('click', async function() {
+            try {
+                showResult('connectionResult', 'connectionText', 'Firebase接続テスト中...');
+                
+                // アプリが正しく初期化されているか確認
+                console.log('Firebase App:', app);
+                console.log('Firebase Auth:', auth);
+                console.log('Firebase Firestore:', db);
+                
+                showResult('connectionResult', 'connectionText', '✓ Firebase接続成功！');
+            } catch (error) {
+                console.error('Firebase接続エラー:', error);
+                showResult('connectionResult', 'connectionText', `✗ Firebase接続エラー: ${error.message}`, true);
+            }
+        });
+
+        // Firestore書き込みテスト
+        document.getElementById('testFirestoreBtn').addEventListener('click', async function() {
+            try {
+                showResult('firestoreResult', 'firestoreText', 'Firestore書き込みテスト中...');
+                
+                // テストアカウントでログイン
+                const email = 'admin@test.com';
+                const password = 'testtest';
+                
+                let user;
+                try {
+                    user = await signInWithEmailAndPassword(auth, email, password);
+                    console.log('ログイン成功:', user.user.email);
+                } catch (error) {
+                    if (error.code === 'auth/user-not-found') {
+                        // アカウントが存在しない場合は作成
+                        user = await createUserWithEmailAndPassword(auth, email, password);
+                        console.log('アカウント作成成功:', user.user.email);
+                    } else {
+                        throw error;
+                    }
+                }
+                
+                // Firestoreにテストデータを書き込み
+                const testData = {
+                    message: 'Firestore書き込みテスト',
+                    timestamp: new Date().toISOString(),
+                    user: user.user.email
+                };
+                
+                const testCollection = collection(db, 'test');
+                const docRef = await addDoc(testCollection, testData);
+                
+                showResult('firestoreResult', 'firestoreText', `✓ Firestore書き込み成功！\nドキュメントID: ${docRef.id}`);
+            } catch (error) {
+                console.error('Firestore書き込みエラー:', error);
+                showResult('firestoreResult', 'firestoreText', `✗ Firestore書き込みエラー: ${error.message}`, true);
+            }
+        });
+
+        // データ読み込みテスト
+        document.getElementById('testReadBtn').addEventListener('click', async function() {
+            try {
+                showResult('readResult', 'readText', 'データ読み込みテスト中...');
+                
+                // Firestoreからテストデータを読み込み
+                const testCollection = collection(db, 'test');
+                const snapshot = await getDocs(testCollection);
+                
+                const documents = [];
+                snapshot.forEach((doc) => {
+                    documents.push({ id: doc.id, ...doc.data() });
+                });
+                
+                if (documents.length === 0) {
+                    showResult('readResult', 'readText', 'データが見つかりません。まず書き込みテストを実行してください。');
+                } else {
+                    showResult('readResult', 'readText', `✓ データ読み込み成功！\n読み込んだドキュメント数: ${documents.length}\n最新データ: ${JSON.stringify(documents[documents.length - 1], null, 2)}`);
+                }
+            } catch (error) {
+                console.error('データ読み込みエラー:', error);
+                showResult('readResult', 'readText', `✗ データ読み込みエラー: ${error.message}`, true);
+            }
+        });
+
+        // ページ読み込み完了
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Firebase シンプルテストページが読み込まれました');
+        });
+    </script>
+</body>
+</html>

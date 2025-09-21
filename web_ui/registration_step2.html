@@ -71,7 +71,7 @@
                         </div>
                         
                         <!-- プレビューエリア -->
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg h-32 mb-3 flex items-center justify-center bg-gray-50">
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg h-32 mb-3 flex items-center justify-center bg-gray-50" id="receiptPreview">
                             <div class="text-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -128,18 +128,464 @@
                 </div>
             </div>
 
-            <!-- 登録ボタン -->
-            <div class="mt-6 pb-4">
-                <button class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block border-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    確認完了
-                </button>
-            </div>
+            <!-- レシート毎の確認ボタンは各レシート内に表示 -->
             </div>
             </div>
         </div>
     </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    
+    <script type="module">
+        // Firebase関数を動的にインポート
+        let firebaseFunctions = null;
+        let currentReceipts = [];
+        let currentIndex = 0;
+        
+        // Firebase関数を読み込み
+        async function loadFirebaseFunctions() {
+            try {
+                console.log('Firebaseモジュールを読み込み中...');
+                
+                // モジュールを読み込み
+                const firebaseModule = await import('./firebase-config.js');
+                console.log('Firebaseモジュール:', firebaseModule);
+                console.log('モジュールのキー:', Object.keys(firebaseModule));
+                
+                // 各関数の存在確認
+                console.log('getUnprocessedReceipts:', firebaseModule.getUnprocessedReceipts);
+                console.log('markReceiptAsConfirmed:', firebaseModule.markReceiptAsConfirmed);
+                console.log('auth:', firebaseModule.auth);
+                
+                // 関数の存在確認
+                if (!firebaseModule.getUnprocessedReceipts) {
+                    console.error('getUnprocessedReceipts関数が見つかりません');
+                console.log('利用可能な関数:', Object.keys(firebaseModule));
+                console.log('関数名の詳細:', Object.keys(firebaseModule).filter(key => key.includes('Receipt')));
+                console.log('すべての関数名:', Object.keys(firebaseModule));
+                    showErrorMessage('getUnprocessedReceipts関数が見つかりません');
+                    return;
+                }
+                
+                if (!firebaseModule.markReceiptAsConfirmed) {
+                    console.error('markReceiptAsConfirmed関数が見つかりません');
+                    showErrorMessage('markReceiptAsConfirmed関数が見つかりません');
+                    return;
+                }
+                
+                // 関数を直接使用する方法に変更
+                firebaseFunctions = {
+                    getUnprocessedReceipts: firebaseModule.getUnprocessedReceipts,
+                    markReceiptAsConfirmed: firebaseModule.markReceiptAsConfirmed,
+                    auth: firebaseModule.auth
+                };
+                
+                console.log('Firebase関数の読み込み完了:', firebaseFunctions);
+                console.log('getUnprocessedReceipts関数の型:', typeof firebaseFunctions.getUnprocessedReceipts);
+                
+                // 利用可能な関数を確認
+                if (firebaseModule.getAvailableFunctions) {
+                    const availableFunctions = firebaseModule.getAvailableFunctions();
+                    console.log('利用可能な関数:', availableFunctions);
+                }
+            } catch (error) {
+                console.error('Firebase関数の読み込みエラー:', error);
+                showErrorMessage('Firebase関数の読み込みに失敗しました: ' + error.message);
+            }
+        }
+        
+        // ページ読み込み時にFirebase関数を読み込み
+        loadFirebaseFunctions();
+        
+        // 未処理レシートを読み込み
+        async function loadUnprocessedReceipts() {
+            if (!firebaseFunctions) {
+                console.error('Firebase関数が読み込まれていません');
+                showErrorMessage('Firebase関数が読み込まれていません。ページを再読み込みしてください。');
+                return;
+            }
+            
+            try {
+                console.log('未処理レシートを読み込み中...');
+                currentReceipts = await firebaseFunctions.getUnprocessedReceipts();
+                console.log('未処理レシート:', currentReceipts);
+                console.log('未処理レシート数:', currentReceipts.length);
+                
+                if (currentReceipts.length === 0) {
+                    showNoReceiptsMessage();
+                    return;
+                }
+                
+                currentIndex = 0;
+                updateReceiptDisplay();
+                updateProgressInfo();
+            } catch (error) {
+                console.error('レシート読み込みエラー:', error);
+                showErrorMessage(`レシートの読み込みに失敗しました: ${error.message}`);
+            }
+        }
+        
+        // レシート表示を更新
+        function updateReceiptDisplay() {
+            if (currentReceipts.length === 0) return;
+            
+            const receipt = currentReceipts[currentIndex];
+            console.log('レシート表示更新:', receipt);
+            
+            // ヘッダー情報を更新
+            const headerElement = document.querySelector('h2');
+            if (headerElement) {
+                headerElement.textContent = `登録レシート一覧 (${currentReceipts.length}件中 ${currentIndex + 1}件目)`;
+            }
+            
+            // レシート画像を更新
+            const receiptPreview = document.getElementById('receiptPreview');
+            if (receiptPreview) {
+                console.log('レシートプレビュー要素を発見:', receiptPreview);
+                
+                if (receipt.imageUrl) {
+                    // 画像が存在する場合
+                    receiptPreview.innerHTML = `
+                        <img src="${receipt.imageUrl}" alt="レシート画像" class="w-full h-full object-contain rounded-lg" 
+                             onerror="this.parentElement.innerHTML='<div class=\\"text-center\\"><svg xmlns=\\"http://www.w3.org/2000/svg\\" class=\\"h-8 w-8 mx-auto text-gray-400 mb-1\\" fill=\\"none\\" viewBox=\\"0 0 24 24\\" stroke=\\"currentColor\\"><path stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\" stroke-width=\\"2\\" d=\\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\\" /></svg><span class=\\"text-gray-500 text-xs\\">${receipt.storeName || 'Unknown Store'}</span></div>'">
+                    `;
+                    console.log('レシート画像を表示:', receipt.imageUrl);
+                } else {
+                    // 画像が存在しない場合、デフォルト表示
+                    receiptPreview.innerHTML = `
+                        <div class="text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span class="text-gray-500 text-xs">画像データなし</span>
+                        </div>
+                    `;
+                    console.log('画像データなしを表示');
+                }
+            } else {
+                console.error('レシートプレビュー要素が見つかりません');
+            }
+            
+            // レシート情報を更新（より具体的なセレクターを使用）
+            const storeNameElement = document.querySelector('.bg-white .text-gray-500.text-xs');
+            if (storeNameElement) {
+                console.log('店舗名要素を発見:', storeNameElement);
+                storeNameElement.textContent = receipt.storeName || 'Unknown Store';
+            } else {
+                console.error('店舗名要素が見つかりません');
+            }
+            
+            // レシート詳細情報を更新（より具体的なセレクターを使用）
+            const detailsContainer = document.querySelector('.bg-white .space-y-2');
+            if (detailsContainer) {
+                console.log('レシート詳細情報のコンテナを発見:', detailsContainer);
+                // 既存の内容をクリア
+                detailsContainer.innerHTML = '';
+                
+                // 新しい内容を追加（編集可能なフィールド）
+                const detailsHTML = `
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">店舗名:</span>
+                        <input type="text" id="storeNameInput" value="${receipt.storeName || ''}" 
+                               class="input input-bordered input-xs w-24 text-xs" placeholder="店舗名">
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">日付:</span>
+                        <input type="date" id="dateInput" value="${receipt.date || ''}" 
+                               class="input input-bordered input-xs w-24 text-xs">
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">金額:</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">${receipt.currency || 'JPY'}</span>
+                            <input type="number" id="amountInput" value="${receipt.totalAmount || 0}" 
+                                   class="input input-bordered input-xs w-16 text-xs" step="0.01" placeholder="金額">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">日本円換算:</span>
+                        <span class="font-medium text-blue-600">¥ ${receipt.jpyAmount || 0}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">場所:</span>
+                        <input type="text" id="locationInput" value="${receipt.location || ''}" 
+                               class="input input-bordered input-xs w-24 text-xs" placeholder="場所">
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-600">カテゴリ:</span>
+                        <select class="select select-bordered select-xs border-gray-300 w-20 text-xs" id="categorySelect">
+                            <option value="food" ${receipt.category === 'food' ? 'selected' : ''}>食費</option>
+                            <option value="transport" ${receipt.category === 'transport' ? 'selected' : ''}>交通費</option>
+                            <option value="shopping" ${receipt.category === 'shopping' ? 'selected' : ''}>お買い物</option>
+                            <option value="entertainment" ${receipt.category === 'entertainment' ? 'selected' : ''}>娯楽</option>
+                            <option value="other" ${receipt.category === 'other' ? 'selected' : ''}>その他</option>
+                        </select>
+                    </div>
+                    
+                    <!-- レシート毎の確認ボタン -->
+                    <div class="mt-4 pt-3 border-t border-gray-200">
+                        <button onclick="handleConfirmation()" class="btn bg-green-600 hover:bg-green-700 text-white btn-sm w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            このレシートを確認完了
+                        </button>
+                    </div>
+                `;
+                
+                detailsContainer.innerHTML = detailsHTML;
+                console.log('レシート詳細情報を更新しました');
+                
+                // 金額変更時の日本円換算を更新
+                const amountInput = document.getElementById('amountInput');
+                const jpyAmountSpan = document.querySelector('.text-blue-600');
+                
+                if (amountInput && jpyAmountSpan) {
+                    const updateJPYAmount = () => {
+                        const currency = receipt.currency || 'JPY';
+                        const amount = parseFloat(amountInput.value) || 0;
+                        
+                        // 簡単な為替レート（実際のアプリではAPIから取得）
+                        const exchangeRates = {
+                            'JPY': 1,
+                            'USD': 150,
+                            'EUR': 160,
+                            'GBP': 190,
+                            'AUD': 100,
+                            'CAD': 110,
+                            'CHF': 170,
+                            'CNY': 20,
+                            'KRW': 0.11,
+                            'SGD': 110,
+                            'THB': 4.2,
+                            'MYR': 32,
+                            'IDR': 0.01,
+                            'PHP': 2.7,
+                            'VND': 0.006,
+                            'INR': 1.8
+                        };
+                        
+                        const jpyAmount = Math.round(amount * (exchangeRates[currency] || 1));
+                        jpyAmountSpan.textContent = `¥ ${jpyAmount}`;
+                    };
+                    
+                    amountInput.addEventListener('input', updateJPYAmount);
+                }
+            } else {
+                console.error('レシート詳細情報のコンテナが見つかりません');
+            }
+            
+            // 次のレシート情報を更新
+            updateNextReceiptDisplay();
+        }
+        
+        // 次のレシート表示を更新
+        function updateNextReceiptDisplay() {
+            // より具体的なセレクターを使用（左端の開発リストを避ける）
+            const nextReceiptDiv = document.querySelector('.bg-white .border.border-gray-100.rounded-lg.p-2.bg-gray-50');
+            if (nextReceiptDiv) {
+                console.log('次のレシート表示のコンテナを発見:', nextReceiptDiv);
+                // 既存の内容をクリア
+                nextReceiptDiv.innerHTML = '';
+                
+                if (currentIndex + 1 < currentReceipts.length) {
+                    const nextReceipt = currentReceipts[currentIndex + 1];
+                    let nextReceiptContent = '';
+                    
+                    if (nextReceipt.imageUrl) {
+                        // 画像が存在する場合
+                        nextReceiptContent = `
+                            <img src="${nextReceipt.imageUrl}" alt="次のレシート画像" class="w-full h-full object-contain rounded"
+                                 onerror="this.parentElement.innerHTML='<span class=\\"text-xs text-gray-400\\">${nextReceipt.storeName || 'Unknown Store'}</span>'">
+                        `;
+                    } else {
+                        // 画像が存在しない場合、テキスト表示
+                        nextReceiptContent = `
+                            <span class="text-xs text-gray-400">${nextReceipt.storeName || 'Unknown Store'}</span>
+                        `;
+                    }
+                    
+                    const nextReceiptHTML = `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500">次のレシート</span>
+                            <span class="text-xs text-gray-500">${currentIndex + 2}/${currentReceipts.length}</span>
+                        </div>
+                        <div class="border border-gray-200 rounded h-16 flex items-center justify-center bg-white">
+                            ${nextReceiptContent}
+                        </div>
+                    `;
+                    nextReceiptDiv.innerHTML = nextReceiptHTML;
+                } else {
+                    const completedHTML = `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500">次のレシート</span>
+                            <span class="text-xs text-gray-500">-</span>
+                        </div>
+                        <div class="border border-gray-200 rounded h-16 flex items-center justify-center bg-white">
+                            <span class="text-xs text-gray-400">すべて確認完了</span>
+                        </div>
+                    `;
+                    nextReceiptDiv.innerHTML = completedHTML;
+                }
+                console.log('次のレシート表示を更新しました');
+            } else {
+                console.error('次のレシート表示のコンテナが見つかりません');
+            }
+        }
+        
+        // 進捗情報を更新
+        function updateProgressInfo() {
+            const processedCount = currentReceipts.length - currentReceipts.length + currentIndex;
+            const remainingCount = currentReceipts.length - currentIndex;
+            
+            // より具体的なセレクターを使用（左端の開発リストを避ける）
+            const progressElement = document.querySelector('.bg-white .flex.justify-between.items-center.mb-4');
+            if (progressElement) {
+                console.log('進捗情報要素を発見:', progressElement);
+                progressElement.innerHTML = `
+                    <span class="text-sm text-gray-600">処理済み: ${processedCount}件</span>
+                    <span class="text-sm text-gray-600">残り: ${remainingCount}件</span>
+                `;
+            } else {
+                console.error('進捗情報要素が見つかりません');
+            }
+        }
+        
+        // レシートなしメッセージを表示
+        function showNoReceiptsMessage() {
+            // より具体的なセレクターを使用（左端の開発リストを避ける）
+            const messageContainer = document.querySelector('.bg-white .bg-white.rounded-lg.shadow-sm.border.border-gray-200.mb-4');
+            if (messageContainer) {
+                console.log('レシートなしメッセージのコンテナを発見:', messageContainer);
+                messageContainer.innerHTML = `
+                    <div class="p-8 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-800 mb-2">確認待ちのレシートがありません</h3>
+                        <p class="text-gray-600 mb-4">すべてのレシートが確認済みです。</p>
+                        <button onclick="window.location.href='registration_step3.html'" class="btn bg-blue-600 hover:bg-blue-700 text-white">
+                            サマリ画面へ
+                        </button>
+                    </div>
+                `;
+            } else {
+                console.error('レシートなしメッセージのコンテナが見つかりません');
+            }
+        }
+        
+        // エラーメッセージを表示
+        function showErrorMessage(message) {
+            // より具体的なセレクターを使用（左端の開発リストを避ける）
+            const errorContainer = document.querySelector('.bg-white .bg-white.rounded-lg.shadow-sm.border.border-gray-200.mb-4');
+            if (errorContainer) {
+                console.log('エラーメッセージのコンテナを発見:', errorContainer);
+                errorContainer.innerHTML = `
+                    <div class="p-8 text-center">
+                        <div class="text-red-600 mb-4">${message}</div>
+                        <button onclick="location.reload()" class="btn btn-outline">再読み込み</button>
+                    </div>
+                `;
+            } else {
+                console.error('エラーメッセージのコンテナが見つかりません');
+            }
+        }
+        
+        // 確認完了ボタンの処理
+        window.handleConfirmation = async function() {
+            if (currentReceipts.length === 0) return;
+            
+            const currentReceipt = currentReceipts[currentIndex];
+            
+            // 編集された値を取得
+            const storeNameInput = document.getElementById('storeNameInput');
+            const dateInput = document.getElementById('dateInput');
+            const amountInput = document.getElementById('amountInput');
+            const locationInput = document.getElementById('locationInput');
+            const categorySelect = document.getElementById('categorySelect');
+            
+            // 編集されたデータを収集（通貨は固定）
+            const currency = currentReceipt.currency || 'JPY';
+            const amount = amountInput ? parseFloat(amountInput.value) || 0 : currentReceipt.totalAmount;
+            
+            // 日本円換算を計算
+            const exchangeRates = {
+                'JPY': 1,
+                'USD': 150,
+                'EUR': 160,
+                'GBP': 190,
+                'AUD': 100,
+                'CAD': 110,
+                'CHF': 170,
+                'CNY': 20,
+                'KRW': 0.11,
+                'SGD': 110,
+                'THB': 4.2,
+                'MYR': 32,
+                'IDR': 0.01,
+                'PHP': 2.7,
+                'VND': 0.006,
+                'INR': 1.8
+            };
+            
+            const jpyAmount = Math.round(amount * (exchangeRates[currency] || 1));
+            
+            const updatedData = {
+                storeName: storeNameInput ? storeNameInput.value : currentReceipt.storeName,
+                date: dateInput ? dateInput.value : currentReceipt.date,
+                currency: currency,
+                totalAmount: amount,
+                location: locationInput ? locationInput.value : currentReceipt.location,
+                category: categorySelect ? categorySelect.value : currentReceipt.category,
+                jpyAmount: jpyAmount
+            };
+            
+            console.log('更新されたデータ:', updatedData);
+            
+            try {
+                // レシートを確認済みにマーク（更新されたデータも含めて）
+                await firebaseFunctions.markReceiptAsConfirmed(currentReceipt.id, updatedData);
+                
+                // 次のレシートに移動
+                currentIndex++;
+                
+                if (currentIndex >= currentReceipts.length) {
+                    // すべて確認完了
+                    showNoReceiptsMessage();
+                } else {
+                    // 次のレシートを表示
+                    updateReceiptDisplay();
+                    updateProgressInfo();
+                }
+                
+                console.log('レシート確認完了:', currentReceipt.id);
+            } catch (error) {
+                console.error('確認処理エラー:', error);
+                alert('確認処理に失敗しました: ' + error.message);
+            }
+        };
+        
+        // ページ読み込み時にレシートを読み込み
+        document.addEventListener('DOMContentLoaded', function() {
+            // Firebase関数の読み込みを待ってからレシートを読み込み
+            const checkFirebaseFunctions = () => {
+                if (firebaseFunctions && firebaseFunctions.getUnprocessedReceipts) {
+                    console.log('Firebase関数が準備完了、レシートを読み込みます');
+                    loadUnprocessedReceipts();
+                } else {
+                    console.log('Firebase関数の読み込み待機中...');
+                    setTimeout(checkFirebaseFunctions, 500);
+                }
+            };
+            
+            setTimeout(checkFirebaseFunctions, 1000);
+        });
+    </script>
 </body>
 </html>

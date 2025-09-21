@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase接続テスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h1 class="text-2xl font-bold text-center mb-6">Firebase接続テスト</h1>
+        
+        <div class="space-y-4">
+            <button id="testFirebase" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                Firebase接続テスト
+            </button>
+            
+            <button id="testAuth" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">
+                認証テスト
+            </button>
+            
+            <div id="status" class="mt-4 p-3 bg-gray-100 rounded-md">
+                <p id="statusText">待機中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+        import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzZk0qF1tBl4Pb_mhsjsU6m7dw1QoT3mM",
+            authDomain: "sotsusei-new.firebaseapp.com",
+            projectId: "sotsusei-new",
+            storageBucket: "sotsusei-new.firebasestorage.app",
+            messagingSenderId: "1091798051561",
+            appId: "1:1091798051561:web:a4e3e4268fe0d175b5de78"
+        };
+
+        function updateStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            const statusText = document.getElementById('statusText');
+            
+            statusText.textContent = message;
+            
+            if (isError) {
+                statusDiv.className = 'mt-4 p-3 bg-red-100 text-red-700 rounded-md';
+            } else {
+                statusDiv.className = 'mt-4 p-3 bg-green-100 text-green-700 rounded-md';
+            }
+        }
+
+        // Firebase接続テスト
+        document.getElementById('testFirebase').addEventListener('click', async function() {
+            try {
+                updateStatus('Firebase初期化中...');
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                
+                updateStatus('Firebase接続成功！');
+                console.log('Firebase接続成功:', app);
+            } catch (error) {
+                updateStatus(`Firebase接続エラー: ${error.message}`, true);
+                console.error('Firebase接続エラー:', error);
+            }
+        });
+
+        // 認証テスト
+        document.getElementById('testAuth').addEventListener('click', async function() {
+            try {
+                updateStatus('認証テスト中...');
+                
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                
+                // テストアカウント作成
+                const email = 'admin@test.com';
+                const password = 'testtest';
+                
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    updateStatus(`アカウント作成成功: ${userCredential.user.email}`);
+                } catch (error) {
+                    if (error.code === 'auth/email-already-in-use') {
+                        // 既存アカウントでログイン試行
+                        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                        updateStatus(`ログイン成功: ${userCredential.user.email}`);
+                    } else {
+                        throw error;
+                    }
+                }
+            } catch (error) {
+                updateStatus(`認証エラー: ${error.message}`, true);
+                console.error('認証エラー:', error);
+            }
+        });
+
+        // ページ読み込み完了
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('Firebase接続テストページが読み込まれました');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini レシート処理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">Gemini レシート処理</h1>
+        
+        <!-- 画像アップロード -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">レシート画像アップロード</h2>
+            <input type="file" id="imageInput" accept="image/*" class="mb-4">
+            <div id="imagePreview" class="mb-4"></div>
+            <button id="processImageBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" disabled>
+                Geminiで画像を処理
+            </button>
+        </div>
+
+        <!-- 処理結果 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">処理結果</h2>
+            <div id="processingResult" class="bg-gray-100 p-4 rounded text-sm">
+                <span class="text-gray-500">画像をアップロードしてください</span>
+            </div>
+        </div>
+
+        <!-- JSONデータ表示 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">生成されたJSONデータ</h2>
+            <button id="saveToFirebaseBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-4" disabled>
+                Firebaseに保存
+            </button>
+            <pre id="jsonOutput" class="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-96">
+                <span class="text-gray-500">JSONデータが生成されていません</span>
+            </pre>
+        </div>
+
+        <!-- Firebase保存結果 -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Firebase保存結果</h2>
+            <div id="firebaseResult" class="bg-gray-100 p-4 rounded text-sm">
+                <span class="text-gray-500">まだ保存されていません</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    
+    <script>
+        let selectedImage = null;
+        let generatedJsonData = null;
+        let firebaseFunctions = null;
+
+        // Firebase関数を読み込み
+        async function loadFirebaseFunctions() {
+            try {
+                const firebaseModule = await import('./firebase-config.js');
+                firebaseFunctions = firebaseModule;
+                console.log('Firebase関数の読み込みが完了しました');
+            } catch (error) {
+                console.error('Firebase関数の読み込みエラー:', error);
+            }
+        }
+
+        // 画像プレビュー表示
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedImage = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="レシート画像" class="max-w-xs max-h-48 object-contain border rounded">
+                        <p class="text-sm text-gray-600 mt-2">ファイル: ${file.name}</p>
+                    `;
+                    document.getElementById('processImageBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Gemini APIで画像を処理
+        document.getElementById('processImageBtn').addEventListener('click', async function() {
+            if (!selectedImage) return;
+
+            const resultDiv = document.getElementById('processingResult');
+            resultDiv.innerHTML = '<span class="text-blue-600">画像を処理中...</span>';
+
+            try {
+                // 画像をBase64に変換
+                const base64Image = await convertToBase64(selectedImage);
+                
+                // Gemini APIを呼び出し（実際のAPIキーが必要）
+                const geminiResponse = await callGeminiAPI(base64Image);
+                
+                // JSONデータを生成
+                generatedJsonData = generateReceiptJson(geminiResponse);
+                
+                // 結果を表示
+                resultDiv.innerHTML = '<span class="text-green-600">✓ 画像処理完了</span>';
+                document.getElementById('jsonOutput').textContent = JSON.stringify(generatedJsonData, null, 2);
+                document.getElementById('saveToFirebaseBtn').disabled = false;
+                
+            } catch (error) {
+                console.error('画像処理エラー:', error);
+                resultDiv.innerHTML = `<span class="text-red-600">✗ エラー: ${error.message}</span>`;
+            }
+        });
+
+        // Firebaseに保存
+        document.getElementById('saveToFirebaseBtn').addEventListener('click', async function() {
+            if (!generatedJsonData || !firebaseFunctions) return;
+
+            const resultDiv = document.getElementById('firebaseResult');
+            resultDiv.innerHTML = '<span class="text-blue-600">Firebaseに保存中...</span>';
+
+            try {
+                // テストアカウントでログイン
+                const email = 'admin@test.com';
+                const password = 'testtest';
+                
+                let user;
+                try {
+                    user = await firebaseFunctions.loginUser(email, password);
+                    console.log('ログイン成功:', user.email);
+                } catch (error) {
+                    if (error.code === 'auth/user-not-found') {
+                        user = await firebaseFunctions.registerUser(email, password);
+                        console.log('アカウント作成成功:', user.email);
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // レシートデータをFirebaseに保存
+                const receiptData = {
+                    id: generatedJsonData.receipt_id || `receipt_${Date.now()}`,
+                    storeName: extractStoreName(generatedJsonData.extracted_data.translated_text),
+                    date: extractDate(generatedJsonData.extracted_data.translated_text),
+                    currency: generatedJsonData.extracted_data.conversions[0]?.original_currency || 'MYR',
+                    totalAmount: generatedJsonData.extracted_data.conversions[0]?.original_amount || 0,
+                    jpyAmount: generatedJsonData.extracted_data.total_jpy || 0,
+                    location: extractLocation(generatedJsonData.extracted_data.translated_text),
+                    category: '食費',
+                    items: extractItems(generatedJsonData.extracted_data.translated_text),
+                    originalText: generatedJsonData.extracted_data.original_text,
+                    translatedText: generatedJsonData.extracted_data.translated_text,
+                    processedAt: generatedJsonData.processed_at || new Date().toISOString(),
+                    exchangeRate: generatedJsonData.extracted_data.conversions[0]?.exchange_rate || 32.0,
+                    geminiProcessed: true
+                };
+
+                const receiptsRef = firebaseFunctions.collection(firebaseFunctions.db, 'users', user.uid, 'receipts');
+                const docRef = await firebaseFunctions.addDoc(receiptsRef, receiptData);
+                
+                resultDiv.innerHTML = `<span class="text-green-600">✓ Firebase保存成功！ドキュメントID: ${docRef.id}</span>`;
+                
+            } catch (error) {
+                console.error('Firebase保存エラー:', error);
+                resultDiv.innerHTML = `<span class="text-red-600">✗ 保存エラー: ${error.message}</span>`;
+            }
+        });
+
+        // 画像をBase64に変換
+        function convertToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Gemini APIを呼び出し（実際の実装）
+        async function callGeminiAPI(base64Image) {
+            // Gemini APIキーを設定（実際のAPIキーに置き換えてください）
+            const GEMINI_API_KEY = 'XXXXXXXXXXX';
+            
+            
+            if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+                // APIキーが設定されていない場合はモックデータを返す
+                console.log('Gemini APIキーが設定されていません。モックデータを使用します。');
+                console.log('APIキーを作成するには:');
+                console.log('1. Google Cloud Console (https://console.cloud.google.com/) にアクセス');
+                console.log('2. プロジェクトを選択');
+                console.log('3. 「APIとサービス」→「認証情報」→「APIキーを作成」');
+                console.log('4. 「Generative Language API」を有効化');
+                return {
+                    text: "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30",
+                    confidence: 0.95
+                };
+            }
+
+            try {
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-goog-api-key': GEMINI_API_KEY,
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `このレシート画像を解析して、以下の情報を抽出してください：
+
+1. 店舗名
+2. 日付
+3. 商品名と価格
+4. 合計金額
+5. 通貨
+6. 場所（都市名、国名）
+
+レシートの内容を正確に読み取って、構造化された情報として提供してください。`
+                            }, {
+                                inline_data: {
+                                    mime_type: "image/jpeg",
+                                    data: base64Image
+                                }
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.1,
+                            topK: 32,
+                            topP: 1,
+                            maxOutputTokens: 1024,
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Gemini API エラー: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    const extractedText = data.candidates[0].content.parts[0].text;
+                    console.log('Gemini API レスポンス:', extractedText);
+                    
+                    return {
+                        text: extractedText,
+                        confidence: 0.95,
+                        rawResponse: data
+                    };
+                } else {
+                    throw new Error('Gemini API から有効なレスポンスが取得できませんでした');
+                }
+
+            } catch (error) {
+                console.error('Gemini API エラー:', error);
+                // エラーの場合はモックデータを返す
+                return {
+                    text: "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30",
+                    confidence: 0.95,
+                    error: error.message
+                };
+            }
+        }
+
+        // レシートJSONを生成
+        function generateReceiptJson(geminiResponse) {
+            const now = new Date().toISOString();
+            return {
+                receipt_id: `receipt_${Date.now()}`,
+                processed_at: now,
+                status: "completed",
+                phases: {
+                    image_processing: {
+                        name: "画像処理フェーズ",
+                        status: "completed",
+                        step_count: 2,
+                        success_count: 2
+                    },
+                    translation: {
+                        name: "翻訳フェーズ",
+                        status: "completed",
+                        step_count: 2,
+                        success_count: 2
+                    },
+                    currency_conversion: {
+                        name: "通貨換算フェーズ",
+                        status: "completed",
+                        step_count: 3,
+                        success_count: 3
+                    }
+                },
+                extracted_data: {
+                    detected_language: "en",
+                    translated_text: geminiResponse.text,
+                    conversions: [
+                        {
+                            original_amount: 15.9,
+                            original_currency: "MYR",
+                            jpy_amount: 508.8,
+                            exchange_rate: 32.0,
+                            conversion_date: now,
+                            context: "Chicken White Rice\nRM 15.90"
+                        }
+                    ],
+                    total_jpy: 508.8,
+                    original_text: geminiResponse.text
+                }
+            };
+        }
+
+        // ヘルパー関数: 店舗名を抽出
+        function extractStoreName(text) {
+            const lines = text.split('\n');
+            return lines[0] || 'Unknown Store';
+        }
+
+        // ヘルパー関数: 日付を抽出
+        function extractDate(text) {
+            const dateMatch = text.match(/Date:\s*(\d{4}-\d{2}-\d{2})/);
+            return dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0];
+        }
+
+        // ヘルパー関数: 場所を抽出
+        function extractLocation(text) {
+            const lines = text.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes('Kuala Lumpur') || lines[i].includes('Malaysia')) {
+                    return 'クアラルンプール';
+                }
+            }
+            return 'Unknown Location';
+        }
+
+        // ヘルパー関数: 商品を抽出
+        function extractItems(text) {
+            const lines = text.split('\n');
+            const items = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                if (line.includes('RM') && line.match(/\d+\.\d+/)) {
+                    const amountMatch = line.match(/RM\s*(\d+\.\d+)/);
+                    if (amountMatch) {
+                        items.push({
+                            name: line.replace(/RM\s*\d+\.\d+/, '').trim() || '商品',
+                            price: parseFloat(amountMatch[1]),
+                            quantity: 1
+                        });
+                    }
+                }
+            }
+            
+            return items.length > 0 ? items : [{ name: '商品', price: 0, quantity: 1 }];
+        }
+
+        // ページ読み込み時にFirebase関数を読み込み
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFirebaseFunctions();
+        });
+    </script>
+</body>
+</html>

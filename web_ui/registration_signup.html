@@ -6,6 +6,9 @@
     <title>海外レシート管理マスター - 新規会員登録</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -28,7 +31,8 @@
                 <a href="registration_step2.html" class="block text-blue-600 hover:underline writing-vertical-rl">2.確認</a>
                 <a href="registration_step3.html" class="block text-blue-600 hover:underline writing-vertical-rl">3.サマリ</a>
                 <a href="registration_signup.html" class="block text-gray-500 writing-vertical-rl">4.会員</a>
-                <a href="registration_memories.html" class="block text-blue-600 hover:underline writing-vertical-rl">5.想い出</a>
+                <a href="login.html" class="block text-blue-600 hover:underline writing-vertical-rl">5.ログイン</a>
+                <a href="registration_memories.html" class="block text-blue-600 hover:underline writing-vertical-rl">6.想い出</a>
             </div>
         </div>
         
@@ -194,36 +198,245 @@
                     <!-- パスワード -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
-                        <input type="password" class="input input-bordered w-full border-gray-300" placeholder="8文字以上（大文字・小文字・数字を含む）" autocomplete="new-password">
+                        <div class="relative">
+                            <input type="password" id="passwordInput" class="input input-bordered w-full border-gray-300 pr-10" placeholder="8文字以上（大文字・小文字・数字を含む）" autocomplete="new-password">
+                            <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <svg id="eyeIcon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
                         <p class="text-xs text-gray-500 mt-1">8文字以上で、大文字・小文字・数字を含む必要があります</p>
                     </div>
 
                     <!-- パスワード確認 -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">パスワード確認</label>
-                        <input type="password" class="input input-bordered w-full border-gray-300" placeholder="パスワードを再入力してください" autocomplete="new-password">
+                        <div class="relative">
+                            <input type="password" id="confirmPasswordInput" class="input input-bordered w-full border-gray-300 pr-10" placeholder="パスワードを再入力してください" autocomplete="new-password">
+                            <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                <svg id="eyeIconConfirm" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
 
                 <!-- 登録ボタン -->
                 <div class="mt-8">
-                    <button class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block border-0">
+                    <button id="registerBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block border-0" onclick="handleRegister()">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         会員登録する
                     </button>
+                    
+                    <!-- デバッグ用ボタン -->
+                    <div class="mt-2">
+                        <button id="debugBtn" class="btn btn-outline btn-sm btn-block" onclick="debugFirebase()">
+                            🔧 Firebase接続テスト
+                        </button>
+                    </div>
+                </div>
+
+                <!-- エラーメッセージ表示エリア -->
+                <div id="errorMessage" class="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm hidden">
+                </div>
+
+                <!-- 成功メッセージ表示エリア -->
+                <div id="successMessage" class="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg text-green-700 text-sm hidden">
                 </div>
 
                 <!-- ログインリンク -->
                 <div class="text-center mt-4">
                     <span class="text-sm text-gray-600">すでにアカウントをお持ちの方は</span>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-700 ml-1">こちらからログイン</a>
+                    <a href="login.html" class="text-sm text-blue-600 hover:text-blue-700 ml-1">こちらからログイン</a>
                 </div>
             </div>
             </div>
         </div>
     </div>
+
+    <script type="module">
+        // Firebase関数を動的にインポート
+        let registerUser = null;
+        
+        // Firebase関数を読み込み
+        async function loadFirebaseFunctions() {
+            try {
+                const firebaseModule = await import('./firebase-config.js');
+                registerUser = firebaseModule.registerUser;
+                console.log('Firebase関数の読み込み完了');
+            } catch (error) {
+                console.error('Firebase関数の読み込みエラー:', error);
+            }
+        }
+        
+        // ページ読み込み時にFirebase関数を読み込み
+        loadFirebaseFunctions();
+        
+        // 登録処理（グローバル関数として定義）
+        window.handleRegister = function() {
+            const email = document.querySelector('input[type="email"]').value;
+            const password = document.querySelector('input[type="password"]').value;
+            const confirmPassword = document.querySelectorAll('input[type="password"]')[1].value;
+            
+            // エラーメッセージをクリア
+            hideMessages();
+            
+            // バリデーション
+            if (!email || !password || !confirmPassword) {
+                showError('すべての項目を入力してください。');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('パスワードが一致しません。');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showError('パスワードは8文字以上で入力してください。');
+                return;
+            }
+            
+            // 登録ボタンを無効化
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> 登録中...';
+            
+            // Firebase関数が読み込まれているかチェック
+            if (!registerUser) {
+                showError('Firebase関数が読み込まれていません。ページを再読み込みしてください。');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    会員登録する
+                `;
+                return;
+            }
+            
+            // Firebase認証で登録
+            registerUser(email, password)
+                .then((user) => {
+                    showSuccess('会員登録が完了しました！ログイン画面に移動します...');
+                    console.log('登録成功:', user);
+                    // 3秒後にログイン画面に遷移
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                })
+                .catch((error) => {
+                    console.error('登録エラー:', error);
+                    let errorMessage = '登録に失敗しました。';
+                    
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            errorMessage = 'このメールアドレスは既に使用されています。';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = '有効なメールアドレスを入力してください。';
+                            break;
+                        case 'auth/weak-password':
+                            errorMessage = 'パスワードが弱すぎます。より強力なパスワードを設定してください。';
+                            break;
+                    }
+                    
+                    showError(errorMessage);
+                })
+                .finally(() => {
+                    // 登録ボタンを有効化
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        会員登録する
+                    `;
+                });
+        }
+        
+        // メッセージを非表示
+        window.hideMessages = function() {
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+        }
+        
+        // エラーメッセージ表示
+        window.showError = function(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        // 成功メッセージ表示
+        window.showSuccess = function(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+        }
+
+        // デバッグ関数
+        window.debugFirebase = function() {
+            console.log('=== Firebase デバッグ情報 ===');
+            console.log('registerUser関数:', registerUser);
+            console.log('Firebase関数の型:', typeof registerUser);
+            
+            if (registerUser) {
+                showSuccess('✅ Firebase関数が正常に読み込まれています');
+            } else {
+                showError('❌ Firebase関数が読み込まれていません');
+            }
+        }
+
+        // パスワード表示/非表示機能
+        document.addEventListener('DOMContentLoaded', function() {
+            // パスワード表示/非表示ボタン
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('passwordInput');
+            const eyeIcon = document.getElementById('eyeIcon');
+
+            togglePassword.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.innerHTML = `
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    `;
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.innerHTML = `
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    `;
+                }
+            });
+
+            // パスワード確認表示/非表示ボタン
+            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+            const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+            const eyeIconConfirm = document.getElementById('eyeIconConfirm');
+
+            toggleConfirmPassword.addEventListener('click', function() {
+                if (confirmPasswordInput.type === 'password') {
+                    confirmPasswordInput.type = 'text';
+                    eyeIconConfirm.innerHTML = `
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    `;
+                } else {
+                    confirmPasswordInput.type = 'password';
+                    eyeIconConfirm.innerHTML = `
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    `;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

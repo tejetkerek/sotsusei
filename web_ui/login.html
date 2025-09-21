@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海外レシート管理マスター - ログイン</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-blue': '#3B82F6',
+                        'custom-gray': '#6B7280'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-base-100 min-h-screen">
+    <div class="min-h-screen bg-gray-100 flex">
+        <!-- 左端の開発中リスト -->
+        <div class="bg-yellow-100 border-r border-yellow-300 p-2 w-20 flex flex-col items-center">
+            <div class="text-xs text-gray-700 space-y-2">
+                <a href="registration_step1.html" class="block text-blue-600 hover:underline writing-vertical-rl">1.登録</a>
+                <a href="registration_step2.html" class="block text-blue-600 hover:underline writing-vertical-rl">2.確認</a>
+                <a href="registration_step3.html" class="block text-blue-600 hover:underline writing-vertical-rl">3.サマリ</a>
+                <a href="registration_signup.html" class="block text-blue-600 hover:underline writing-vertical-rl">4.会員</a>
+                <a href="login.html" class="block text-gray-500 writing-vertical-rl">5.ログイン</a>
+            </div>
+        </div>
+        
+        <div class="flex-1 flex justify-center items-center">
+            <!-- スマホフレーム -->
+            <div class="relative">
+                <!-- スマホの外枠 -->
+                <div class="w-80 h-[500px] bg-gray-800 rounded-[2.5rem] p-2 shadow-2xl">
+                    <!-- スマホの内側 -->
+                    <div class="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
+                        <!-- ノッチ（iPhone風） -->
+                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
+                        
+                        <!-- ステータスバー -->
+                        <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm pt-8">
+                            <span class="font-medium">海外レシート管理マスター</span>
+                        </div>
+                    
+                        <div class="px-4 py-6 h-full overflow-y-auto">
+                            <!-- ヘッダー -->
+                            <div class="text-center mb-6">
+                                <h1 class="text-xl font-bold text-gray-800">ログイン</h1>
+                                <p class="text-sm text-gray-600 mt-2">アカウントにログインしてください</p>
+                                
+                                <!-- テスト用アカウント情報 -->
+                                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p class="text-xs text-blue-700 font-medium mb-1">テスト用アカウント</p>
+                                    <p class="text-xs text-blue-600">ID: admin@test.com</p>
+                                    <p class="text-xs text-blue-600">PW: testtest</p>
+                                </div>
+                            </div>
+
+                            <!-- ログインフォーム -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+                                <div class="p-4">
+                                    <div class="space-y-4">
+                                        <!-- メールアドレス -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">メールアドレス</label>
+                                            <input type="email" id="emailInput" class="input input-bordered w-full border-gray-300" placeholder="example@email.com" autocomplete="email" value="admin@test.com">
+                                        </div>
+
+                                        <!-- パスワード -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
+                                            <input type="password" id="passwordInput" class="input input-bordered w-full border-gray-300" placeholder="パスワードを入力してください" autocomplete="current-password" value="testtest">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ログインボタン -->
+                            <div class="mb-4">
+                                <button id="loginBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block border-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    </svg>
+                                    ログイン
+                                </button>
+                            </div>
+
+                            <!-- テストアカウント作成ボタン -->
+                            <div class="mb-4">
+                                <button id="createTestBtn" class="btn btn-outline btn-sm btn-block">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    テストアカウントを作成
+                                </button>
+                            </div>
+
+                            <!-- エラーメッセージ表示エリア -->
+                            <div id="errorMessage" class="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm hidden">
+                            </div>
+
+                            <!-- 成功メッセージ表示エリア -->
+                            <div id="successMessage" class="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg text-green-700 text-sm hidden">
+                            </div>
+
+                            <!-- パスワードリセットリンク -->
+                            <div class="text-center mb-4">
+                                <a href="#" class="text-sm text-blue-600 hover:text-blue-700">パスワードを忘れた場合</a>
+                            </div>
+
+                            <!-- 会員登録リンク -->
+                            <div class="text-center">
+                                <span class="text-sm text-gray-600">アカウントをお持ちでない方は</span>
+                                <a href="registration_signup.html" class="text-sm text-blue-600 hover:text-blue-700 ml-1">こちらから会員登録</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase関数を動的インポート
+        let loginUser, initializeDummyData, createTestAccount;
+        
+        // Firebase関数を読み込み
+        async function loadFirebaseFunctions() {
+            try {
+                const firebaseModule = await import('./firebase-config.js');
+                loginUser = firebaseModule.loginUser;
+                initializeDummyData = firebaseModule.initializeDummyData;
+                createTestAccount = firebaseModule.createTestAccount;
+                console.log('Firebase関数の読み込みが完了しました');
+            } catch (error) {
+                console.error('Firebase関数の読み込みエラー:', error);
+            }
+        }
+        
+        // イベントリスナーを設定
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Firebase関数を読み込み
+            await loadFirebaseFunctions();
+            
+            // テストアカウント作成ボタン
+            document.getElementById('createTestBtn').addEventListener('click', async function() {
+                const createTestBtn = document.getElementById('createTestBtn');
+                createTestBtn.disabled = true;
+                createTestBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> 作成中...';
+                
+                try {
+                    if (!createTestAccount) {
+                        throw new Error('createTestAccount関数が読み込まれていません');
+                    }
+                    await createTestAccount();
+                    showSuccess('テストアカウントが作成されました！');
+                    
+                    // フォームに自動入力
+                    document.getElementById('emailInput').value = 'admin@test.com';
+                    document.getElementById('passwordInput').value = 'testtest';
+                    
+                } catch (error) {
+                    console.error('テストアカウント作成エラー:', error);
+                    showError('テストアカウントの作成に失敗しました: ' + error.message);
+                } finally {
+                    createTestBtn.disabled = false;
+                    createTestBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        テストアカウントを作成
+                    `;
+                }
+            });
+
+            // ログインボタン
+            document.getElementById('loginBtn').addEventListener('click', function() {
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                
+                // エラーメッセージをクリア
+                hideMessages();
+                
+                // バリデーション
+                if (!email || !password) {
+                    showError('メールアドレスとパスワードを入力してください。');
+                    return;
+                }
+                
+                // ログインボタンを無効化
+                const loginBtn = document.getElementById('loginBtn');
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> ログイン中...';
+                
+                // Firebase関数の読み込み確認
+                if (!loginUser) {
+                    showError('Firebase関数が読み込まれていません。ページを再読み込みしてください。', true);
+                    return;
+                }
+                
+                // Firebase認証でログイン
+                loginUser(email, password)
+                    .then(async (user) => {
+                        showSuccess('ログインが完了しました！');
+                        console.log('ログイン成功:', user);
+                    
+                    // admin@test.comの場合、ダミーデータを初期化
+                    if (user.email === 'admin@test.com') {
+                        try {
+                            await initializeDummyData();
+                            console.log('ダミーデータの初期化が完了しました');
+                        } catch (error) {
+                            console.error('ダミーデータ初期化エラー:', error);
+                        }
+                    }
+                    
+                    // 3秒後にメイン画面に遷移
+                    setTimeout(() => {
+                        window.location.href = 'registration_step1.html';
+                    }, 3000);
+                })
+                .catch((error) => {
+                    console.error('ログインエラー:', error);
+                    let errorMessage = 'ログインに失敗しました。';
+                    
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            errorMessage = 'このメールアドレスは登録されていません。';
+                            break;
+                        case 'auth/wrong-password':
+                            errorMessage = 'パスワードが正しくありません。';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = '有効なメールアドレスを入力してください。';
+                            break;
+                        case 'auth/too-many-requests':
+                            errorMessage = 'ログイン試行回数が多すぎます。しばらく待ってから再試行してください。';
+                            break;
+                    }
+                    
+                        showError(errorMessage);
+                })
+                .finally(() => {
+                    // ログインボタンを有効化
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        ログイン
+                    `;
+                });
+            });
+        });
+        
+        // メッセージを非表示
+        function hideMessages() {
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+        }
+        
+        // エラーメッセージ表示
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        // 成功メッセージ表示
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

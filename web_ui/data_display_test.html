@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データ表示テスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">データ表示テスト</h1>
+        
+        <!-- JSONデータ読み込み -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">JSONデータ読み込み</h2>
+            <button id="loadJsonBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                JSONデータを読み込む
+            </button>
+        </div>
+
+        <!-- データ表示エリア -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">レシートデータ</h2>
+            <div id="receiptData" class="space-y-4">
+                <p class="text-gray-500">データが読み込まれていません</p>
+            </div>
+        </div>
+
+        <!-- サマリー表示エリア -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">サマリー</h2>
+            <div id="summaryData" class="space-y-4">
+                <p class="text-gray-500">サマリーが表示されていません</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let jsonData = null;
+
+        // JSONデータを読み込み
+        async function loadJSONData() {
+            try {
+                const response = await fetch('../results/test_receipt_001_summary.json');
+                if (!response.ok) {
+                    throw new Error('JSONファイルの読み込みに失敗しました');
+                }
+                jsonData = await response.json();
+                
+                displayReceiptData();
+                displaySummaryData();
+                
+                console.log('JSONデータが読み込まれました:', jsonData);
+            } catch (error) {
+                console.error('JSON読み込みエラー:', error);
+                document.getElementById('receiptData').innerHTML = `
+                    <span class="text-red-600">エラー: ${error.message}</span>
+                `;
+            }
+        }
+
+        // レシートデータを表示
+        function displayReceiptData() {
+            if (!jsonData) return;
+
+            const extractedData = jsonData.extracted_data;
+            const conversions = extractedData.conversions[0];
+
+            const receiptHtml = `
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold">${extractStoreName(extractedData.translated_text)}</h3>
+                            <p class="text-sm text-gray-600">${extractDate(extractedData.translated_text)}</p>
+                            <p class="text-sm text-gray-600">${extractLocation(extractedData.translated_text)}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold">${conversions.original_amount} ${conversions.original_currency}</p>
+                            <p class="text-sm text-gray-600">= ${conversions.jpy_amount}円</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <h4 class="font-semibold mb-2">商品詳細</h4>
+                        <div class="space-y-2">
+                            ${extractItems(extractedData.translated_text).map(item => `
+                                <div class="flex justify-between">
+                                    <span>${item.name}</span>
+                                    <span>${item.price} ${conversions.original_currency}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4 mt-4">
+                        <div class="flex justify-between font-semibold">
+                            <span>合計</span>
+                            <span>${conversions.original_amount} ${conversions.original_currency} = ${conversions.jpy_amount}円</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">為替レート: ${conversions.exchange_rate}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('receiptData').innerHTML = receiptHtml;
+        }
+
+        // サマリーデータを表示
+        function displaySummaryData() {
+            if (!jsonData) return;
+
+            const extractedData = jsonData.extracted_data;
+            const conversions = extractedData.conversions[0];
+
+            const summaryHtml = `
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-blue-800 mb-2">基本情報</h3>
+                        <div class="space-y-1 text-sm">
+                            <p><strong>店舗:</strong> ${extractStoreName(extractedData.translated_text)}</p>
+                            <p><strong>日付:</strong> ${extractDate(extractedData.translated_text)}</p>
+                            <p><strong>場所:</strong> ${extractLocation(extractedData.translated_text)}</p>
+                            <p><strong>通貨:</strong> ${conversions.original_currency}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-green-800 mb-2">金額情報</h3>
+                        <div class="space-y-1 text-sm">
+                            <p><strong>現地通貨:</strong> ${conversions.original_amount} ${conversions.original_currency}</p>
+                            <p><strong>日本円:</strong> ${conversions.jpy_amount}円</p>
+                            <p><strong>為替レート:</strong> ${conversions.exchange_rate}</p>
+                            <p><strong>処理日時:</strong> ${new Date(jsonData.processed_at).toLocaleString('ja-JP')}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">翻訳されたテキスト</h3>
+                    <pre class="text-xs text-gray-700 whitespace-pre-wrap">${extractedData.translated_text}</pre>
+                </div>
+            `;
+
+            document.getElementById('summaryData').innerHTML = summaryHtml;
+        }
+
+        // ヘルパー関数
+        function extractStoreName(text) {
+            const lines = text.split('\n');
+            return lines[0] || 'Unknown Store';
+        }
+
+        function extractDate(text) {
+            const dateMatch = text.match(/Date:\s*(\d{4}-\d{2}-\d{2})/);
+            return dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0];
+        }
+
+        function extractLocation(text) {
+            const lines = text.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes('Kuala Lumpur') || lines[i].includes('Malaysia')) {
+                    return 'クアラルンプール';
+                }
+            }
+            return 'Unknown Location';
+        }
+
+        function extractItems(text) {
+            const lines = text.split('\n');
+            const items = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                if (line.includes('RM') && line.match(/\d+\.\d+/)) {
+                    const amountMatch = line.match(/RM\s*(\d+\.\d+)/);
+                    if (amountMatch) {
+                        items.push({
+                            name: line.replace(/RM\s*\d+\.\d+/, '').trim() || '商品',
+                            price: parseFloat(amountMatch[1])
+                        });
+                    }
+                }
+            }
+            
+            return items.length > 0 ? items : [{ name: '商品', price: 0 }];
+        }
+
+        // ページ読み込み完了
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('loadJsonBtn').addEventListener('click', loadJSONData);
+        });
+    </script>
+</body>
+</html>

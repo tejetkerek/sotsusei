@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デバッグチェックリスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">デバッグチェックリスト</h1>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- 基本チェック -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-blue-600">1. 基本チェック</h2>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        F12で開発者ツールを開く
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        Consoleタブでエラーを確認
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        赤いエラーメッセージがないかチェック
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        ページが正常に読み込まれるか
+                    </li>
+                </ul>
+            </div>
+
+            <!-- JavaScriptチェック -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-green-600">2. JavaScriptチェック</h2>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        括弧が正しく閉じられているか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        セミコロンが抜けていないか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        関数名のタイプミスがないか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        イベントリスナーが正しく設定されているか
+                    </li>
+                </ul>
+            </div>
+
+            <!-- HTMLチェック -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-purple-600">3. HTMLチェック</h2>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        タグが正しく閉じられているか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        id属性が重複していないか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        属性の値が正しく引用符で囲まれているか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        外部ライブラリが正しく読み込まれているか
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Firebaseチェック -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4 text-orange-600">4. Firebaseチェック</h2>
+                <ul class="space-y-2 text-sm">
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        Firebase設定が正しいか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        必要なサービスが有効化されているか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        インポート文が正しいか
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-4 h-4 bg-green-500 rounded-full mr-2"></span>
+                        ネットワーク接続が正常か
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- テストボタン -->
+        <div class="mt-8 text-center">
+            <button id="testBtn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 mr-4">
+                基本テスト
+            </button>
+            <button id="firebaseTestBtn" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
+                Firebaseテスト
+            </button>
+            <div id="testResult" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
+                <p id="testResultText"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showResult(message, isError = false) {
+            const resultDiv = document.getElementById('testResult');
+            const resultText = document.getElementById('testResultText');
+            
+            resultText.textContent = message;
+            resultDiv.classList.remove('hidden');
+            
+            if (isError) {
+                resultDiv.className = 'mt-4 p-4 bg-red-100 text-red-700 rounded-lg';
+            } else {
+                resultDiv.className = 'mt-4 p-4 bg-green-100 text-green-700 rounded-lg';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('デバッグチェックリストページが読み込まれました');
+            showResult('ページが正常に読み込まれました');
+
+            // 基本テスト
+            document.getElementById('testBtn').addEventListener('click', function() {
+                showResult('基本テストが成功しました！JavaScriptが正常に動作しています。');
+            });
+
+            // Firebaseテスト
+            document.getElementById('firebaseTestBtn').addEventListener('click', async function() {
+                try {
+                    showResult('Firebase接続テスト中...');
+                    
+                    // Firebase関数を動的インポート
+                    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js");
+                    
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyCzZk0qF1tBl4Pb_mhsjsU6m7dw1QoT3mM",
+                        authDomain: "sotsusei-new.firebaseapp.com",
+                        projectId: "sotsusei-new",
+                        storageBucket: "sotsusei-new.firebasestorage.app",
+                        messagingSenderId: "1091798051561",
+                        appId: "1:1091798051561:web:a4e3e4268fe0d175b5de78"
+                    };
+                    
+                    const app = initializeApp(firebaseConfig);
+                    showResult('Firebase接続テストが成功しました！');
+                    
+                } catch (error) {
+                    console.error('Firebaseテストエラー:', error);
+                    showResult(`Firebase接続エラー: ${error.message}`, true);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

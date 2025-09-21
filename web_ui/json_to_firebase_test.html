@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to Firebase テスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">JSON to Firebase テスト</h1>
+        
+        <!-- ログイン状態 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">ログイン状態</h2>
+            <div id="loginStatus" class="text-sm">
+                <span class="text-gray-500">確認中...</span>
+            </div>
+        </div>
+
+        <!-- JSONデータ読み込み -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">JSONデータ読み込み</h2>
+            <div class="space-y-4">
+                <button id="loadJsonBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    JSONデータを読み込む
+                </button>
+                <button id="saveToFirebaseBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" disabled>
+                    Firebaseに保存
+                </button>
+                <button id="testSaveBtn" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+                    テストデータを保存
+                </button>
+                <button id="simpleTestBtn" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                    シンプルテスト
+                </button>
+                <button id="debugBtn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    デバッグ情報
+                </button>
+            </div>
+        </div>
+
+        <!-- JSONデータ表示 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">JSONデータ</h2>
+            <div id="jsonData" class="bg-gray-100 p-4 rounded text-sm font-mono overflow-auto max-h-96">
+                <span class="text-gray-500">JSONデータが読み込まれていません</span>
+            </div>
+        </div>
+
+        <!-- Firebase保存結果 -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">Firebase保存結果</h2>
+            <div id="firebaseResult" class="bg-gray-100 p-4 rounded text-sm">
+                <span class="text-gray-500">まだ保存されていません</span>
+            </div>
+        </div>
+
+        <!-- 保存されたデータ表示 -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">保存されたレシートデータ</h2>
+            <button id="loadReceiptsBtn" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 mb-4">
+                保存されたデータを読み込み
+            </button>
+            <div id="receiptsData" class="bg-gray-100 p-4 rounded text-sm">
+                <span class="text-gray-500">データが読み込まれていません</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    
+    <script>
+        let jsonData = null;
+        let firebaseFunctions = null;
+
+        // Firebase関数を読み込み
+        async function loadFirebaseFunctions() {
+            try {
+                const firebaseModule = await import('./firebase-config.js');
+                firebaseFunctions = firebaseModule;
+                console.log('Firebase関数の読み込みが完了しました');
+                console.log('利用可能な関数:', Object.keys(firebaseModule));
+            } catch (error) {
+                console.error('Firebase関数の読み込みエラー:', error);
+            }
+        }
+
+        // ログイン状態を確認
+        function checkLoginStatus() {
+            const statusDiv = document.getElementById('loginStatus');
+            if (firebaseFunctions && firebaseFunctions.auth) {
+                const user = firebaseFunctions.auth.currentUser;
+                if (user) {
+                    statusDiv.innerHTML = `
+                        <span class="text-green-600">✓ ログイン済み: ${user.email}</span>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <span class="text-red-600">✗ ログインしていません</span>
+                        <br><a href="login.html" class="text-blue-600 hover:underline">ログインページへ</a>
+                    `;
+                }
+            } else {
+                statusDiv.innerHTML = '<span class="text-gray-500">Firebase関数を読み込み中...</span>';
+            }
+        }
+
+        // JSONデータを読み込み
+        async function loadJSONData() {
+            try {
+                const response = await fetch('../results/test_receipt_001_summary.json');
+                if (!response.ok) {
+                    throw new Error('JSONファイルの読み込みに失敗しました');
+                }
+                jsonData = await response.json();
+                
+                document.getElementById('jsonData').innerHTML = `
+                    <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                `;
+                
+                document.getElementById('saveToFirebaseBtn').disabled = false;
+                console.log('JSONデータが読み込まれました:', jsonData);
+            } catch (error) {
+                console.error('JSON読み込みエラー:', error);
+                document.getElementById('jsonData').innerHTML = `
+                    <span class="text-red-600">エラー: ${error.message}</span>
+                `;
+            }
+        }
+
+        // Firebaseに保存
+        async function saveToFirebase() {
+            if (!jsonData || !firebaseFunctions) {
+                alert('JSONデータまたはFirebase関数が読み込まれていません');
+                return;
+            }
+
+            if (!firebaseFunctions.saveReceiptFromJSON) {
+                alert('saveReceiptFromJSON関数が見つかりません。利用可能な関数: ' + Object.keys(firebaseFunctions).join(', '));
+                return;
+            }
+
+            try {
+                document.getElementById('firebaseResult').innerHTML = '<span class="text-blue-600">保存中...</span>';
+                
+                const result = await firebaseFunctions.saveReceiptFromJSON(jsonData);
+                
+                document.getElementById('firebaseResult').innerHTML = `
+                    <span class="text-green-600">✓ 保存成功！</span>
+                    <br>ID: ${result.id}
+                    <br>店舗: ${result.storeName}
+                    <br>金額: ${result.totalAmount} ${result.currency} → ${result.jpyAmount}円
+                `;
+                
+                console.log('Firebase保存成功:', result);
+            } catch (error) {
+                console.error('Firebase保存エラー:', error);
+                document.getElementById('firebaseResult').innerHTML = `
+                    <span class="text-red-600">エラー: ${error.message}</span>
+                `;
+            }
+        }
+
+        // デバッグ情報を表示
+        function showDebugInfo() {
+            if (!firebaseFunctions) {
+                alert('Firebase関数が読み込まれていません');
+                return;
+            }
+
+            const availableFunctions = Object.keys(firebaseFunctions);
+            const debugInfo = `
+                <strong>利用可能な関数:</strong><br>
+                ${availableFunctions.join(', ')}<br><br>
+                <strong>関数の詳細:</strong><br>
+                ${availableFunctions.map(func => `${func}: ${typeof firebaseFunctions[func]}`).join('<br>')}
+            `;
+            
+            document.getElementById('firebaseResult').innerHTML = `
+                <span class="text-blue-600">デバッグ情報</span><br>
+                ${debugInfo}
+            `;
+            
+            console.log('利用可能な関数:', availableFunctions);
+            console.log('Firebase関数オブジェクト:', firebaseFunctions);
+        }
+
+        // シンプルテスト
+        async function simpleTest() {
+            if (!firebaseFunctions) {
+                alert('Firebase関数が読み込まれていません');
+                return;
+            }
+
+            if (!firebaseFunctions.simpleTest) {
+                alert('simpleTest関数が見つかりません。利用可能な関数: ' + Object.keys(firebaseFunctions).join(', '));
+                return;
+            }
+
+            try {
+                document.getElementById('firebaseResult').innerHTML = '<span class="text-blue-600">シンプルテスト実行中...</span>';
+                
+                const result = await firebaseFunctions.simpleTest();
+                
+                document.getElementById('firebaseResult').innerHTML = `
+                    <span class="text-green-600">✓ シンプルテスト成功！</span>
+                    <br>メッセージ: ${result.message}
+                    <br>ユーザー: ${result.user}
+                    <br>時刻: ${result.timestamp}
+                `;
+                
+                console.log('シンプルテスト成功:', result);
+            } catch (error) {
+                console.error('シンプルテストエラー:', error);
+                document.getElementById('firebaseResult').innerHTML = `
+                    <span class="text-red-600">エラー: ${error.message}</span>
+                `;
+            }
+        }
+
+        // テストデータを保存
+        async function testSave() {
+            if (!firebaseFunctions) {
+                alert('Firebase関数が読み込まれていません');
+                return;
+            }
+
+            if (!firebaseFunctions.testSaveReceipt) {
+                alert('testSaveReceipt関数が見つかりません');
+                return;
+            }
+
+            try {
+                document.getElementById('firebaseResult').innerHTML = '<span class="text-blue-600">テストデータ保存中...</span>';
+                
+                const result = await firebaseFunctions.testSaveReceipt();
+                
+                document.getElementById('firebaseResult').innerHTML = `
+                    <span class="text-green-600">✓ テストデータ保存成功！</span>
+                    <br>ID: ${result.id}
+                    <br>店舗: ${result.storeName}
+                    <br>金額: ${result.totalAmount} ${result.currency} → ${result.jpyAmount}円
+                `;
+                
+                console.log('テストデータ保存成功:', result);
+            } catch (error) {
+                console.error('テストデータ保存エラー:', error);
+                document.getElementById('firebaseResult').innerHTML = `
+                    <span class="text-red-600">エラー: ${error.message}</span>
+                `;
+            }
+        }
+
+        // 保存されたデータを読み込み
+        async function loadReceipts() {
+            if (!firebaseFunctions) {
+                alert('Firebase関数が読み込まれていません');
+                return;
+            }
+
+            try {
+                document.getElementById('receiptsData').innerHTML = '<span class="text-blue-600">読み込み中...</span>';
+                
+                const receipts = await firebaseFunctions.getUserReceipts();
+                
+                if (receipts.length === 0) {
+                    document.getElementById('receiptsData').innerHTML = '<span class="text-gray-500">保存されたデータがありません</span>';
+                } else {
+                    document.getElementById('receiptsData').innerHTML = `
+                        <pre>${JSON.stringify(receipts, null, 2)}</pre>
+                    `;
+                }
+                
+                console.log('保存されたデータ:', receipts);
+            } catch (error) {
+                console.error('データ読み込みエラー:', error);
+                document.getElementById('receiptsData').innerHTML = `
+                    <span class="text-red-600">エラー: ${error.message}</span>
+                `;
+            }
+        }
+
+        // ページ読み込み完了
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadFirebaseFunctions();
+            checkLoginStatus();
+            
+            // イベントリスナーを設定
+            document.getElementById('loadJsonBtn').addEventListener('click', loadJSONData);
+            document.getElementById('saveToFirebaseBtn').addEventListener('click', saveToFirebase);
+            document.getElementById('testSaveBtn').addEventListener('click', testSave);
+            document.getElementById('simpleTestBtn').addEventListener('click', simpleTest);
+            document.getElementById('debugBtn').addEventListener('click', showDebugInfo);
+            document.getElementById('loadReceiptsBtn').addEventListener('click', loadReceipts);
+            
+            // 定期的にログイン状態を確認
+            setInterval(checkLoginStatus, 2000);
+        });
+    </script>
+</body>
+</html>
