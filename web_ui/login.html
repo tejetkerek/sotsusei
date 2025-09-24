@@ -24,33 +24,18 @@
 </head>
 <body class="bg-base-100 min-h-screen">
     <div class="min-h-screen bg-gray-100 flex">
-        <!-- 左端の開発中リスト -->
-        <div class="bg-yellow-100 border-r border-yellow-300 p-2 w-20 flex flex-col items-center">
-            <div class="text-xs text-gray-700 space-y-2">
-                <a href="registration_step1.html" class="block text-blue-600 hover:underline writing-vertical-rl">1.登録</a>
-                <a href="registration_step2.html" class="block text-blue-600 hover:underline writing-vertical-rl">2.確認</a>
-                <a href="registration_step3.html" class="block text-blue-600 hover:underline writing-vertical-rl">3.サマリ</a>
-                <a href="registration_signup.html" class="block text-blue-600 hover:underline writing-vertical-rl">4.会員</a>
-                <a href="login.html" class="block text-gray-500 writing-vertical-rl">5.ログイン</a>
+        <div class="flex-1 flex justify-center">
+            <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
+            <!-- ステータスバー -->
+            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm relative">
+                <span class="font-medium">海外レシート管理マスター</span>
+                <div id="userInfo" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs">
+                    <span class="loading loading-spinner loading-xs"></span>
+                    <span class="ml-1">読み込み中...</span>
+                </div>
             </div>
-        </div>
-        
-        <div class="flex-1 flex justify-center items-center">
-            <!-- スマホフレーム -->
-            <div class="relative">
-                <!-- スマホの外枠 -->
-                <div class="w-80 h-[500px] bg-gray-800 rounded-[2.5rem] p-2 shadow-2xl">
-                    <!-- スマホの内側 -->
-                    <div class="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                        <!-- ノッチ（iPhone風） -->
-                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
-                        
-                        <!-- ステータスバー -->
-                        <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm pt-8">
-                            <span class="font-medium">海外レシート管理マスター</span>
-                        </div>
-                    
-                        <div class="px-4 py-6 h-full overflow-y-auto">
+            
+            <div class="px-4 py-6">
                             <!-- ヘッダー -->
                             <div class="text-center mb-6">
                                 <h1 class="text-xl font-bold text-gray-800">ログイン</h1>
@@ -121,9 +106,6 @@
                                 <span class="text-sm text-gray-600">アカウントをお持ちでない方は</span>
                                 <a href="registration_signup.html" class="text-sm text-blue-600 hover:text-blue-700 ml-1">こちらから会員登録</a>
                             </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -133,15 +115,46 @@
         let loginUser, initializeDummyData, createTestAccount;
         
         // Firebase関数を読み込み
+        let firebaseFunctions;
         async function loadFirebaseFunctions() {
             try {
                 const firebaseModule = await import('./firebase-config.js');
                 loginUser = firebaseModule.loginUser;
                 initializeDummyData = firebaseModule.initializeDummyData;
                 createTestAccount = firebaseModule.createTestAccount;
+                firebaseFunctions = firebaseModule;
                 console.log('Firebase関数の読み込みが完了しました');
+                
+                // ユーザー情報を表示
+                updateUserInfo();
             } catch (error) {
                 console.error('Firebase関数の読み込みエラー:', error);
+            }
+        }
+        
+        // ユーザー情報を表示
+        function updateUserInfo() {
+            const userInfoDiv = document.getElementById('userInfo');
+            if (!userInfoDiv) return;
+            
+            // localStorageから認証状態を確認
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userEmail = localStorage.getItem('userEmail');
+            
+            if (isLoggedIn && userEmail) {
+                userInfoDiv.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>${userEmail}</span>
+                `;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span>未ログイン</span>
+                `;
             }
         }
         
@@ -211,6 +224,10 @@
                     .then(async (user) => {
                         showSuccess('ログインが完了しました！');
                         console.log('ログイン成功:', user);
+                        
+                        // localStorageに認証状態を保存
+                        localStorage.setItem('userEmail', user.email);
+                        localStorage.setItem('isLoggedIn', 'true');
                     
                     // admin@test.comの場合、ダミーデータを初期化
                     if (user.email === 'admin@test.com') {

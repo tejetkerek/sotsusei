@@ -25,129 +25,69 @@
 </head>
 <body class="bg-base-100 min-h-screen">
     <div class="min-h-screen bg-gray-100 flex">
-        <!-- 左端の開発中リスト -->
-        <div class="bg-yellow-100 border-r border-yellow-300 p-2 w-20 flex flex-col items-center">
-            <div class="text-xs text-gray-700 space-y-2">
-                <a href="registration_step1.html" class="block text-gray-500 writing-vertical-rl">1.登録</a>
-                <a href="registration_step2.html" class="block text-blue-600 hover:underline writing-vertical-rl">2.確認</a>
-                <a href="registration_step3.html" class="block text-blue-600 hover:underline writing-vertical-rl">3.サマリ</a>
-                <a href="registration_signup.html" class="block text-blue-600 hover:underline writing-vertical-rl">4.会員</a>
-                <a href="login.html" class="block text-blue-600 hover:underline writing-vertical-rl">5.ログイン</a>
-                <a href="registration_memories.html" class="block text-blue-600 hover:underline writing-vertical-rl">6.想い出</a>
-            </div>
-        </div>
-        
-        <div class="flex-1 flex justify-center items-center">
-            <!-- スマホフレーム -->
-            <div class="relative">
-                <!-- スマホの外枠 -->
-                <div class="w-80 h-[600px] bg-gray-800 rounded-[2.5rem] p-2 shadow-2xl">
-                    <!-- スマホの内側 -->
-                    <div class="w-full h-full bg-white rounded-[2rem] overflow-hidden relative">
-                        <!-- ノッチ（iPhone風） -->
-                        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
-                        
-                        <!-- ステータスバー -->
-                        <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm pt-8">
-                            <span class="font-medium">海外レシート管理マスター</span>
-                        </div>
-                    
-                        <div class="px-4 py-6 h-full overflow-y-auto">
-                            <!-- ヘッダー -->
-                            <div class="text-center mb-3">
-                                <h1 class="text-base font-bold text-gray-800">登録</h1>
-                                <!-- プログレスバー -->
-                                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1.5">
-                                    <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" id="progressBar" style="width: 33%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Step 1: 通貨指定 -->
-                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-3">
-                                <div class="p-3">
-                                    <h2 class="text-sm font-semibold mb-2 text-gray-800">Step1：換算元の通貨指定</h2>
-                                    
-                                    <div class="space-y-2">
-                                        <!-- 換算元通貨 -->
-                                        <div class="form-control">
-                                            <select class="select select-bordered w-full select-sm border-gray-300 text-xs" id="fromCurrencySelect" onchange="updateFlag()">
-                                                <option value="JPY" selected>JPY - 日本円</option>
-                                                <option value="USD">USD - 米ドル</option>
-                                                <option value="EUR">EUR - ユーロ</option>
-                                                <option value="THB">THB - タイバーツ</option>
-                                                <option value="MYR">MYR - マレーシア・リンギット</option>
-                                                <option value="KRW">KRW - 韓国ウォン</option>
-                                                <option value="CNY">CNY - 中国元</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Step 2: レシートの取り込み -->
-                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-3">
-                                <div class="p-3">
-                                    <h2 class="text-sm font-semibold mb-2 text-gray-800">Step2：レシートの取り込み</h2>
-                                    
-                                    <!-- レシートプレビューエリア -->
-                                    <div class="relative">
-                                        <!-- 左矢印 -->
-                                        <div class="absolute -left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                        </div>
-                                        
-                                        <!-- プレビューエリア -->
-                                        <div class="border-2 border-dashed border-gray-300 rounded-lg h-32 mb-3 flex items-center justify-center bg-gray-50 mx-5">
-                                            <div id="previewPlaceholder" class="text-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                <span class="text-gray-500 text-xs">プレビュー</span>
-                                            </div>
-                                            <img id="previewImage" class="hidden w-full h-full object-cover rounded-lg" alt="選択された画像">
-                                        </div>
-                                        
-                                        <!-- 右矢印 -->
-                                        <div class="absolute -right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </div>
-                                    </div>
-
-                                    <!-- ファイル選択 -->
-                                    <div class="flex gap-2">
-                                        <button class="btn btn-outline btn-sm flex-1 flex items-center text-xs px-2" onclick="openCamera()">
-                                            <span class="truncate">カメラで撮影</span>
-                                        </button>
-                                        
-                                        <button class="btn btn-outline btn-sm flex-1 flex items-center text-xs px-2" onclick="document.getElementById('fileInput').click()">
-                                            <span class="truncate">フォルダから選択</span>
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- 隠しファイル入力 -->
-                                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
-                                </div>
-                            </div>
-
-                            <!-- 登録ボタン -->
-                            <div class="pb-4">
-                                <button id="registerBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block border-0 btn-sm" onclick="handleRegistration()">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="text-xs">登録</span>
-                                </button>
-                            </div>
-                            
-                            <!-- ステータス表示 -->
-                            <div id="statusMessage" class="hidden mb-3 p-2 rounded text-xs text-center"></div>
-                        </div>
-                    </div>
+        <div class="flex-1 flex justify-center">
+            <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
+            <!-- ステータスバー -->
+            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm relative">
+                <span class="font-medium">海外レシート管理マスター</span>
+                <div id="userInfo" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs">
+                    <span class="loading loading-spinner loading-xs"></span>
+                    <span class="ml-1">読み込み中...</span>
                 </div>
+            </div>
+            
+            <div class="px-4 py-6">
+            <!-- ヘッダー -->
+            <div class="text-center mb-6">
+            </div>
+            
+            <!-- レシートアップロード -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+                <div class="p-4">
+                    <!-- レシートプレビューエリア -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg h-40 mb-4 flex items-center justify-center bg-gray-50">
+                        <div id="previewPlaceholder" class="text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span class="text-gray-500 text-sm">レシート画像を選択してください</span>
+                        </div>
+                        <img id="previewImage" class="hidden w-full h-full object-contain rounded-lg" alt="選択された画像">
+                    </div>
+
+                    <!-- ファイル選択 -->
+                    <div class="text-center">
+                        <button class="btn btn-outline btn-sm" onclick="document.getElementById('fileInput').click()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            画像を選択
+                        </button>
+                    </div>
+                    
+                    <!-- 隠しファイル入力 -->
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+            </div>
+
+            <!-- 登録ボタン -->
+            <div class="pb-4">
+                <button id="registerBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block" onclick="handleRegistration()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    登録
+                </button>
+            </div>
+            
+            <!-- サマリ表示リンク -->
+            <div class="text-center mb-4">
+                <a href="registration_step3.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
+                    登録済みレシートのサマリーへ
+                </a>
+            </div>
+            
+            </div>
             </div>
         </div>
     </div>
@@ -169,6 +109,7 @@
                     auth: firebaseModule.auth
                 };
                 console.log('Firebase関数の読み込み完了');
+                updateUserInfo();
             } catch (error) {
                 console.error('Firebase関数の読み込みエラー:', error);
             }
@@ -180,30 +121,6 @@
         // 選択されたファイルを保存
         let selectedFile = null;
         
-        // 換算元通貨選択に連動して国旗アイコンを更新
-        function updateFlag() {
-            const fromCurrencySelect = document.getElementById('fromCurrencySelect');
-            const flagIcon = document.getElementById('flagIcon');
-            
-            // 要素が存在しない場合は何もしない
-            if (!fromCurrencySelect || !flagIcon) {
-                return;
-            }
-            
-            const selectedCurrency = fromCurrencySelect.value;
-            
-            const flagMap = {
-                'JPY': 'JP',
-                'USD': 'US',
-                'EUR': 'EU',
-                'THB': 'TH',
-                'MYR': 'MY',
-                'KRW': 'KR',
-                'CNY': 'CN'
-            };
-            
-            flagIcon.textContent = flagMap[selectedCurrency] || 'JP';
-        }
         
         // ファイル選択処理（グローバル関数として定義）
         window.handleFileSelect = function(event) {
@@ -249,17 +166,10 @@
             reader.readAsDataURL(file);
         }
         
-        // カメラ撮影（将来実装）
-        function openCamera() {
-            alert('カメラ機能は今後実装予定です。フォルダから選択をお使いください。');
-        }
         
-        // ステータスメッセージ表示
+        // ステータスメッセージ表示（コンソールログに変更）
         function showStatus(message, type = 'info') {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `mb-3 p-2 rounded text-xs text-center ${type === 'error' ? 'bg-red-100 text-red-700' : type === 'success' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`;
-            statusDiv.classList.remove('hidden');
+            console.log(`[${type.toUpperCase()}] ${message}`);
         }
         
         // 画像をBase64に変換
@@ -276,9 +186,9 @@
         async function analyzeImageWithGemini(base64Image) {
             try {
                 // Firebase Functions を動的にインポート
-                const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js');
-                const functions = getFunctions();
+                const {functions, httpsCallable } = await import('./firebase-config.js');
                 const analyzeReceipt = httpsCallable(functions, 'analyzeReceipt');
+
                 
                 console.log('Firebase Functions を使用してレシートを分析中...');
                 const result = await analyzeReceipt({
@@ -465,9 +375,43 @@
             }
         };
         
+        // ログイン画面に遷移
+        window.goToLogin = function() {
+            window.location.href = 'login.html';
+        };
+        
+        // ユーザー情報を表示
+        function updateUserInfo() {
+            const userInfoDiv = document.getElementById('userInfo');
+            if (!userInfoDiv) return;
+            
+            // localStorageから認証状態を確認
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userEmail = localStorage.getItem('userEmail');
+            
+            if (isLoggedIn && userEmail) {
+                userInfoDiv.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>${userEmail}</span>
+                `;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <button onclick="goToLogin()" class="flex items-center hover:text-blue-200 transition-colors cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span>未ログイン</span>
+                    </button>
+                `;
+            }
+        }
+
         // ページ読み込み時に初期化
         document.addEventListener('DOMContentLoaded', function() {
-            updateFlag();
+            console.log('ページ読み込み完了');
+            updateUserInfo();
         });
     </script>
             </div>

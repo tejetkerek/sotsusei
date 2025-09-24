@@ -18,49 +18,52 @@
             }
         }
     </script>
+    
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
 </head>
 <body class="bg-base-100 min-h-screen">
     <div class="min-h-screen bg-gray-100 flex">
-        <!-- 左端の開発中リスト -->
-        <div class="bg-yellow-100 border-r border-yellow-300 p-2 w-20 flex flex-col items-center">
-            <div class="text-xs text-gray-700 space-y-2">
-                <a href="registration_step1.html" class="block text-blue-600 hover:underline writing-vertical-rl">1.登録</a>
-                <a href="registration_step2.html" class="block text-blue-600 hover:underline writing-vertical-rl">2.確認</a>
-                <a href="registration_step3.html" class="block text-gray-500 writing-vertical-rl">3.サマリ</a>
-                <a href="registration_signup.html" class="block text-blue-600 hover:underline writing-vertical-rl">4.会員</a>
-                <a href="registration_memories.html" class="block text-blue-600 hover:underline writing-vertical-rl">5.想い出</a>
-            </div>
-        </div>
-        
         <div class="flex-1 flex justify-center">
             <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
             <!-- ステータスバー -->
-            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm">
+            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm relative">
                 <span class="font-medium">海外レシート管理マスター</span>
+                <div id="userInfo" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs">
+                    <span class="loading loading-spinner loading-xs"></span>
+                    <span class="ml-1">読み込み中...</span>
+                </div>
             </div>
             
             <div class="px-4 py-6">
             <!-- ヘッダー -->
             <div class="text-center mb-6">
-                <h1 class="text-xl font-bold text-gray-800">サマリー</h1>
-                <!-- プログレスバー -->
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 100%"></div>
-                </div>
             </div>
 
-            <!-- 完了メッセージ -->
-            <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <div class="flex-1">
-                        <h3 class="font-medium text-green-800 text-sm">登録完了！</h3>
-                        <p class="text-xs text-green-600 mb-2">レシートの登録が正常に完了しました</p>
-                        <div class="text-xs text-green-700">
-                            <div>登録件数: 3件</div>
-                            <div>金額合計: ¥1,560</div>
+
+            <!-- 期間設定 -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">グラフの対象期間</h3>
+                    <div class="space-y-3">
+                        <!-- カスタム期間 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">カスタム期間</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                <div class="flex gap-2">
+                                    <input type="date" id="startDate" class="input input-bordered input-sm flex-1">
+                                    <span class="text-gray-500 self-center text-sm">〜</span>
+                                    <input type="date" id="endDate" class="input input-bordered input-sm flex-1">
+                                </div>
+                                <button onclick="setCustomPeriod()" class="btn btn-sm btn-primary w-full">
+                                    適用
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- 現在の期間表示 -->
+                        <div class="text-sm text-gray-600">
+                            <span id="currentPeriod">現在の期間: 1ヶ月</span>
                         </div>
                     </div>
                 </div>
@@ -73,151 +76,735 @@
                     <div class="space-y-6">
                         <!-- 日付別推移グラフ -->
                         <div class="bg-gray-50 rounded-lg p-3">
-                            <div class="flex justify-between items-center mb-3">
-                                <div class="text-sm text-gray-600">支出金額の推移（単位：円）</div>
-                            </div>
                             <div class="h-48 bg-white rounded relative">
-                                <!-- 縦軸の目盛り -->
-                                <div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2">
-                                    <div class="text-right">1,000</div>
-                                    <div class="text-right">800</div>
-                                    <div class="text-right">600</div>
-                                    <div class="text-right">400</div>
-                                    <div class="text-right">200</div>
-                                    <div class="text-right">0</div>
-                                </div>
-                                
                                 <!-- グラフエリア -->
                                 <div class="ml-8 h-full relative px-2 py-2">
-                                    <!-- 折れ線グラフ -->
-                                    <svg class="w-full h-full" viewBox="0 0 200 120">
-                                        <!-- グリッド線 -->
-                                        <defs>
-                                            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                                                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f3f4f6" stroke-width="0.5"/>
-                                            </pattern>
-                                        </defs>
-                                        <rect width="100%" height="100%" fill="url(#grid)" />
-                                        
-                                        <!-- 折れ線 -->
-                                        <polyline
-                                            fill="none"
-                                            stroke="#3B82F6"
-                                            stroke-width="2"
-                                            points="10,100 30,80 50,60 70,40 90,70 110,50 130,30 150,20"
-                                        />
-                                        
-                                        <!-- データポイント -->
-                                        <circle cx="10" cy="100" r="2" fill="#3B82F6" />
-                                        <text x="10" y="115" text-anchor="middle" font-size="7" fill="#6B7280">1/13</text>
-                                        <circle cx="30" cy="80" r="2" fill="#3B82F6" />
-                                        <text x="30" y="95" text-anchor="middle" font-size="7" fill="#6B7280">1/14</text>
-                                        <circle cx="50" cy="60" r="2" fill="#3B82F6" />
-                                        <text x="50" y="75" text-anchor="middle" font-size="7" fill="#6B7280">1/15</text>
-                                        <circle cx="70" cy="40" r="2" fill="#3B82F6" />
-                                        <text x="70" y="55" text-anchor="middle" font-size="7" fill="#6B7280">1/16</text>
-                                        <circle cx="90" cy="70" r="2" fill="#3B82F6" />
-                                        <text x="90" y="85" text-anchor="middle" font-size="7" fill="#6B7280">1/17</text>
-                                        <circle cx="110" cy="50" r="2" fill="#3B82F6" />
-                                        <text x="110" y="65" text-anchor="middle" font-size="7" fill="#6B7280">1/18</text>
-                                        <circle cx="130" cy="30" r="2" fill="#3B82F6" />
-                                        <text x="130" y="45" text-anchor="middle" font-size="7" fill="#6B7280">1/19</text>
-                                        <circle cx="150" cy="20" r="2" fill="#3B82F6" />
-                                        <text x="150" y="35" text-anchor="middle" font-size="7" fill="#6B7280">1/20</text>
-                                    </svg>
-                                    
+                                    <!-- グラフは動的に生成される -->
                                 </div>
-                                
-                                <!-- 縦軸の線 -->
-                                <div class="absolute left-8 top-0 bottom-0 w-px bg-gray-200"></div>
                             </div>
                         </div>
                         
-                        <!-- カテゴリ別円グラフ -->
-                        <div class="bg-gray-50 rounded-lg p-3">
-                            <div class="text-sm text-gray-600 mb-3">カテゴリ別支出</div>
-                            <div class="flex items-center justify-end">
-                                <!-- 円グラフ -->
-                                <div class="w-28 h-28 relative mr-4">
-                                    <svg class="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
-                                        <!-- 食費 25% -->
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#3B82F6" stroke-width="10" 
-                                                stroke-dasharray="62.83 188.5" stroke-dashoffset="0"></circle>
-                                        <!-- 交通費 20% -->
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" stroke-width="10" 
-                                                stroke-dasharray="50.27 201.06" stroke-dashoffset="-62.83"></circle>
-                                        <!-- お買い物 30% -->
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#F59E0B" stroke-width="10" 
-                                                stroke-dasharray="75.4 176.93" stroke-dashoffset="-113.1"></circle>
-                                        <!-- 娯楽 15% -->
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#EF4444" stroke-width="10" 
-                                                stroke-dasharray="37.7 214.63" stroke-dashoffset="-188.5"></circle>
-                                        <!-- その他 10% -->
-                                        <circle cx="50" cy="50" r="40" fill="none" stroke="#8B5CF6" stroke-width="10" 
-                                                stroke-dasharray="25.13 226.2" stroke-dashoffset="-226.2"></circle>
-                                    </svg>
-                                </div>
-                                
-                                <!-- 凡例 -->
-                                <div class="flex-1 space-y-1">
-                                    <div class="flex items-center justify-end">
-                                        <span class="text-xs text-gray-700 mr-2">お買い物</span>
-                                        <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                                        <span class="text-xs text-gray-700">¥470 (30%)</span>
-                                    </div>
-                                    <div class="flex items-center justify-end">
-                                        <span class="text-xs text-gray-700 mr-2">食費</span>
-                                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                                        <span class="text-xs text-gray-700">¥390 (25%)</span>
-                                    </div>
-                                    <div class="flex items-center justify-end">
-                                        <span class="text-xs text-gray-700 mr-2">交通費</span>
-                                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                                        <span class="text-xs text-gray-700">¥310 (20%)</span>
-                                    </div>
-                                    <div class="flex items-center justify-end">
-                                        <span class="text-xs text-gray-700 mr-2">娯楽</span>
-                                        <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                                        <span class="text-xs text-gray-700">¥230 (15%)</span>
-                                    </div>
-                                    <div class="flex items-center justify-end">
-                                        <span class="text-xs text-gray-700 mr-2">その他</span>
-                                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                                        <span class="text-xs text-gray-700">¥160 (10%)</span>
-                                    </div>
-                                </div>
+                       
+                        
+                        <!-- アクションリンク -->
+                        <div class="space-y-3">
+                            <div class="text-center">
+                                <a href="registration_step1.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
+                                    新たなレシートを追加する
+                                </a>
+                            </div>
+                            <div class="text-center">
+                                <a href="all_receipts.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
+                                    登録済みレシートのサマリーへ
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- アクションボタン -->
-            <div class="space-y-3 mb-6">
-                <button class="btn btn-outline btn-block">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    エクスポート
-                </button>
-                
-                    <button class="btn btn-primary btn-block" onclick="window.location.href='http://localhost:8080/web_ui/registration_signup.html'">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        保存
-                    </button>
-            </div>
-
-            <!-- 次のアクション -->
-            <div class="text-center">
-                <a href="registration_step1.html" class="text-blue-600 text-sm hover:text-blue-800">
-                    新しいレシートを登録する
-                </a>
-            </div>
             </div>
             </div>
         </div>
     </div>
+
+    <script type="module">
+        // Firebase関数を動的インポート
+        let firebaseFunctions;
+        
+        // Firebase関数を読み込み
+        async function loadFirebaseFunctions() {
+            try {
+                const firebaseModule = await import('./firebase-config.js');
+                firebaseFunctions = firebaseModule;
+                console.log('Firebase関数の読み込みが完了しました');
+                
+                // ユーザー情報を表示
+                updateUserInfo();
+                
+                // 認証状態を待ってからグラフを読み込み
+                await waitForAuth();
+            } catch (error) {
+                console.error('Firebase関数の読み込みエラー:', error);
+            }
+        }
+        
+        // 認証状態を待つ関数
+        async function waitForAuth() {
+            return new Promise((resolve) => {
+                const checkAuth = () => {
+                    if (firebaseFunctions && firebaseFunctions.auth) {
+                        const user = firebaseFunctions.auth.currentUser;
+                        if (user) {
+                            console.log('認証状態確認完了:', user.email);
+                            loadGraphData();
+                            resolve();
+                        } else {
+                            // 認証状態がまだ確定していない場合、少し待って再試行
+                            setTimeout(checkAuth, 100);
+                        }
+                    } else {
+                        // Firebase関数がまだ読み込まれていない場合、少し待って再試行
+                        setTimeout(checkAuth, 100);
+                    }
+                };
+                checkAuth();
+            });
+        }
+        
+        // ログイン画面に遷移
+        window.goToLogin = function() {
+            window.location.href = 'login.html';
+        };
+        
+        // 全レシート表示画面に遷移
+        window.viewAllReceipts = function() {
+            window.location.href = 'all_receipts.html';
+        };
+        
+        // ユーザー情報を表示
+        function updateUserInfo() {
+            const userInfoDiv = document.getElementById('userInfo');
+            if (!userInfoDiv) return;
+            
+            // localStorageから認証状態を確認
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userEmail = localStorage.getItem('userEmail');
+            
+            if (isLoggedIn && userEmail) {
+                userInfoDiv.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>${userEmail}</span>
+                `;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <button onclick="goToLogin()" class="flex items-center hover:text-blue-200 transition-colors cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span>未ログイン</span>
+                    </button>
+                `;
+            }
+        }
+        
+        // 期間設定の変数
+        let currentPeriod = 'all';
+        let startDate = null;
+        let endDate = null;
+        let allReceipts = []; // 全レシートデータを保存
+        
+        // 期間設定関数
+        window.setPeriod = function(period) {
+            currentPeriod = period;
+            
+            // ボタンのアクティブ状態を更新（ボタンが存在する場合のみ）
+            const periodButtons = document.querySelectorAll('.period-btn');
+            if (periodButtons.length > 0) {
+                periodButtons.forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline');
+                });
+                const activeButton = document.querySelector(`[data-period="${period}"]`);
+                if (activeButton) {
+                    activeButton.classList.remove('btn-outline');
+                    activeButton.classList.add('btn-primary');
+                }
+            }
+            
+            // 期間を計算
+            const today = new Date();
+            switch(period) {
+                case 'week':
+                    startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    endDate = today;
+                    updatePeriodDisplay('1週間');
+                    break;
+                case 'month':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                    endDate = today;
+                    updatePeriodDisplay('1ヶ月');
+                    break;
+                case '3months':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+                    endDate = today;
+                    updatePeriodDisplay('3ヶ月');
+                    break;
+                case 'year':
+                    startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+                    endDate = today;
+                    updatePeriodDisplay('1年');
+                    break;
+                case 'all':
+                    startDate = null;
+                    endDate = null;
+                    updatePeriodDisplay('すべて');
+                    break;
+            }
+            
+            // グラフを更新
+            updateGraph();
+        };
+        
+        // カスタム期間設定
+        window.setCustomPeriod = function() {
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            
+            if (!startInput.value || !endInput.value) {
+                alert('開始日と終了日を選択してください');
+                return;
+            }
+            
+            startDate = new Date(startInput.value);
+            endDate = new Date(endInput.value);
+            
+            if (startDate > endDate) {
+                alert('開始日は終了日より前の日付を選択してください');
+                return;
+            }
+            
+            // カスタム期間に設定
+            currentPeriod = 'custom';
+            
+            console.log('カスタム期間設定:', {
+                startDate: startInput.value,
+                endDate: endInput.value,
+                startDateObj: startDate,
+                endDateObj: endDate,
+                currentPeriod: currentPeriod
+            });
+            
+            // ボタンのアクティブ状態をリセット
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+            });
+            
+            const periodText = `${startInput.value} 〜 ${endInput.value}`;
+            updatePeriodDisplay(periodText);
+            
+            // グラフを更新
+            updateGraph();
+        };
+        
+        // 期間表示を更新
+        function updatePeriodDisplay(periodText) {
+            const currentPeriodElement = document.getElementById('currentPeriod');
+            if (currentPeriodElement) {
+                currentPeriodElement.textContent = `現在の期間: ${periodText}`;
+            } else {
+                console.warn('currentPeriod要素が見つかりません');
+            }
+        }
+        
+        // グラフを更新
+        function updateGraph() {
+            console.log('グラフを更新中...', { currentPeriod, startDate, endDate });
+            
+            // 既に読み込まれたデータがある場合は、それを使用してグラフを更新
+            if (allReceipts && allReceipts.length > 0) {
+                const filteredReceipts = filterReceiptsByPeriod(allReceipts);
+                updateGraphDisplay(filteredReceipts);
+            } else {
+                // データがない場合は再読み込み
+                loadGraphData();
+            }
+        }
+        
+        // グラフデータを読み込み
+        async function loadGraphData() {
+            try {
+                if (!firebaseFunctions || !firebaseFunctions.getUserReceipts) {
+                    console.error('getUserReceipts関数が見つかりません');
+                    return;
+                }
+
+                // DOM要素の存在を確認
+                const currentPeriodElement = document.getElementById('currentPeriod');
+                if (!currentPeriodElement) {
+                    console.warn('currentPeriod要素がまだ読み込まれていません。少し待ってから再試行します。');
+                    setTimeout(loadGraphData, 100);
+                    return;
+                }
+
+                console.log('グラフデータを読み込み中...');
+                
+                // Firebaseからレシートデータを取得（削除フラグが立っていないもののみ）
+                const rawReceipts = await firebaseFunctions.getUserReceipts();
+                
+                // 重複するIDのレシートを処理（最新のupdatedAtを持つものを優先）
+                const receiptMap = new Map();
+                rawReceipts.forEach(receipt => {
+                    const existingReceipt = receiptMap.get(receipt.id);
+                    if (!existingReceipt || 
+                        (receipt.updatedAt && existingReceipt.updatedAt && 
+                         new Date(receipt.updatedAt) > new Date(existingReceipt.updatedAt))) {
+                        receiptMap.set(receipt.id, receipt);
+                    }
+                });
+                
+                allReceipts = Array.from(receiptMap.values());
+                
+                console.log('重複除去後のレシート数:', allReceipts.length, '件');
+                
+                // 全期間の場合は、レシートが存在する期間を自動設定
+                if (currentPeriod === 'all' && allReceipts.length > 0) {
+                    setAllPeriodFromReceipts();
+                } else if (currentPeriod === 'custom' && (!startDate || !endDate)) {
+                    // カスタム期間が設定されているが、startDate/endDateが未設定の場合は全期間にフォールバック
+                    console.log('カスタム期間の日付が未設定のため、全期間にフォールバック');
+                    currentPeriod = 'all';
+                    setAllPeriodFromReceipts();
+                }
+                
+                // 期間に基づいてデータをフィルタリング
+                const filteredReceipts = filterReceiptsByPeriod(allReceipts);
+                
+                // グラフを更新
+                updateGraphDisplay(filteredReceipts);
+                
+            } catch (error) {
+                console.error('グラフデータの読み込みエラー:', error);
+                
+                // 認証エラーの場合は適切なメッセージを表示
+                if (error.message && error.message.includes('ログインしていません')) {
+                    showAuthError();
+                } else {
+                    showDataError();
+                }
+            }
+        }
+        
+        // 認証エラーを表示
+        function showAuthError() {
+            const graphContainer = document.querySelector('.bg-gray-50.rounded-lg.p-3');
+            if (!graphContainer) return;
+            
+            graphContainer.innerHTML = `
+                <div class="flex items-center justify-center h-48">
+                    <div class="text-center">
+                        <div class="text-red-500 text-4xl mb-4">🔒</div>
+                        <div class="text-red-600 font-medium mb-2">認証エラー</div>
+                        <div class="text-gray-600 text-sm mb-4">ログインが必要です</div>
+                        <button onclick="goToLogin()" class="btn btn-primary btn-sm">
+                            ログイン画面へ
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // データエラーを表示
+        function showDataError() {
+            const graphContainer = document.querySelector('.bg-gray-50.rounded-lg.p-3');
+            if (!graphContainer) return;
+            
+            graphContainer.innerHTML = `
+                <div class="flex items-center justify-center h-48">
+                    <div class="text-center">
+                        <div class="text-gray-400 text-4xl mb-4">📊</div>
+                        <div class="text-gray-600 font-medium mb-2">データの読み込みに失敗しました</div>
+                        <div class="text-gray-500 text-sm">ページを再読み込みしてください</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // レシートデータから全期間を自動設定
+        function setAllPeriodFromReceipts() {
+            if (allReceipts.length === 0) return;
+            
+            const dates = allReceipts.map(receipt => {
+                const dateStr = receipt.transaction?.date || receipt.date;
+                return new Date(dateStr);
+            }).filter(date => !isNaN(date.getTime()));
+            
+            if (dates.length > 0) {
+                startDate = new Date(Math.min(...dates));
+                endDate = new Date(Math.max(...dates));
+                
+                // 期間表示を更新
+                const startStr = startDate.toISOString().split('T')[0];
+                const endStr = endDate.toISOString().split('T')[0];
+                updatePeriodDisplay(`${startStr} 〜 ${endStr}`);
+                
+                console.log('全期間を自動設定:', startStr, '〜', endStr);
+            }
+        }
+        
+        // カテゴリ名を日本語に変換
+        function translateCategory(category) {
+            const categoryMap = {
+                'food': '食費',
+                'transportation': '交通費',
+                'accommodation': '宿泊費',
+                'entertainment': '娯楽費',
+                'shopping': '買い物',
+                'healthcare': '医療費',
+                'education': '教育費',
+                'other': 'その他'
+            };
+            
+            return categoryMap[category.toLowerCase()] || category;
+        }
+        
+        // 期間に基づいてレシートをフィルタリング
+        function filterReceiptsByPeriod(receipts) {
+            if (!startDate || !endDate) {
+                return receipts;
+            }
+            
+            return receipts.filter(receipt => {
+                const receiptDate = new Date(receipt.transaction?.date || receipt.date);
+                return receiptDate >= startDate && receiptDate <= endDate;
+            });
+        }
+        
+        // グラフ表示を更新
+        function updateGraphDisplay(receipts = []) {
+            const graphContainer = document.querySelector('.bg-gray-50.rounded-lg.p-3');
+            if (!graphContainer) return;
+            
+            const periodText = currentPeriod === 'all' ? '全期間' : 
+                             currentPeriod === 'week' ? '1週間' :
+                             currentPeriod === 'month' ? '1ヶ月' :
+                             currentPeriod === '3months' ? '3ヶ月' :
+                             currentPeriod === 'year' ? '1年' : 'カスタム期間';
+            
+            // レシートデータから統計を計算
+            const totalAmount = Math.round(receipts.reduce((sum, receipt) => {
+                // jpyAmountが存在する場合はそれを使用（修正済みレシート）
+                if (receipt.jpyAmount) {
+                    return sum + receipt.jpyAmount;
+                }
+                
+                // 従来の計算方法（jpyAmountがない場合）
+                const amount = receipt.transaction?.amount || receipt.totalAmount || 0;
+                const currency = receipt.transaction?.currency || receipt.currency || 'JPY';
+                
+                // JPYに換算（簡易版）
+                if (currency === 'JPY') {
+                    return sum + amount;
+                } else if (currency === 'USD') {
+                    return sum + (amount * 150); // 簡易換算
+                } else if (currency === 'EUR') {
+                    return sum + (amount * 160); // 簡易換算
+                }
+                return sum + amount;
+            }, 0));
+            
+            const receiptCount = receipts.length;
+            
+            // カテゴリ別集計
+            const categoryTotals = {};
+            receipts.forEach(receipt => {
+                let category = receipt.category || 'その他';
+                // カテゴリ名を日本語に変換
+                category = translateCategory(category);
+                
+                // jpyAmountが存在する場合はそれを使用（修正済みレシート）
+                let jpyAmount;
+                if (receipt.jpyAmount) {
+                    jpyAmount = receipt.jpyAmount;
+                } else {
+                    // 従来の計算方法（jpyAmountがない場合）
+                    const amount = receipt.transaction?.amount || receipt.totalAmount || 0;
+                    const currency = receipt.transaction?.currency || receipt.currency || 'JPY';
+                    
+                    jpyAmount = amount;
+                    if (currency === 'USD') {
+                        jpyAmount = amount * 150;
+                    } else if (currency === 'EUR') {
+                        jpyAmount = amount * 160;
+                    }
+                }
+                
+                categoryTotals[category] = (categoryTotals[category] || 0) + Math.round(jpyAmount);
+            });
+            
+            // 日別集計（折れ線グラフ用）
+            const dailyTotals = {};
+            receipts.forEach(receipt => {
+                const dateStr = receipt.transaction?.date || receipt.date;
+                
+                // jpyAmountが存在する場合はそれを使用（修正済みレシート）
+                let jpyAmount;
+                if (receipt.jpyAmount) {
+                    jpyAmount = receipt.jpyAmount;
+                } else {
+                    // 従来の計算方法（jpyAmountがない場合）
+                    const amount = receipt.transaction?.amount || receipt.totalAmount || 0;
+                    const currency = receipt.transaction?.currency || receipt.currency || 'JPY';
+                    
+                    jpyAmount = amount;
+                    if (currency === 'USD') {
+                        jpyAmount = amount * 150;
+                    } else if (currency === 'EUR') {
+                        jpyAmount = amount * 160;
+                    }
+                }
+                
+                dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + Math.round(jpyAmount);
+            });
+            
+            // グラフHTMLを生成
+            graphContainer.innerHTML = `
+                <div class="space-y-4">
+                    <h4 class="font-medium text-gray-800 text-center">支出分析 (${periodText})</h4>
+                    
+                    <!-- 統計サマリー -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-3 rounded border text-center">
+                            <div class="text-gray-600 text-sm">総支出</div>
+                            <div class="font-bold text-lg text-blue-600">¥${totalAmount.toLocaleString()}</div>
+                        </div>
+                        <div class="bg-white p-3 rounded border text-center">
+                            <div class="text-gray-600 text-sm">レシート数</div>
+                            <div class="font-bold text-lg text-green-600">${receiptCount}件</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 折れ線グラフ（日別支出） -->
+                    <div class="bg-white p-3 rounded border">
+                        <h5 class="font-medium text-gray-700 mb-2 text-center">日別支出推移</h5>
+                        <div class="h-40 bg-gray-50 rounded pb-8">
+                            ${generateLineChart(dailyTotals)}
+                        </div>
+                    </div>
+                    
+                    <!-- カテゴリ別支出一覧 -->
+                    <div class="bg-white p-3 rounded border">
+                        <h5 class="font-medium text-gray-700 mb-2 text-center">カテゴリ別支出</h5>
+                        ${totalAmount === 0 || Object.keys(categoryTotals).length === 0 ? 
+                            `<div class="flex items-center justify-center h-24">
+                                <div class="text-center">
+                                    <div class="text-gray-400 text-3xl mb-1">📊</div>
+                                    <div class="text-gray-500 text-xs">カテゴリデータなし</div>
+                                </div>
+                            </div>` :
+                            generateCategoryList(categoryTotals, totalAmount)
+                        }
+                    </div>
+                    
+                </div>
+            `;
+        }
+        
+        // カテゴリ別支出一覧を生成
+        function generateCategoryList(categoryTotals, totalAmount) {
+            const categories = Object.entries(categoryTotals)
+                .sort(([,a], [,b]) => b - a); // 金額順でソート
+            
+            return `
+                <div class="space-y-2">
+                    ${categories.map(([category, amount]) => {
+                        const percentage = ((amount / totalAmount) * 100).toFixed(1);
+                        return `
+                            <div class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
+                                <div class="flex-1">
+                                    <div class="font-medium text-gray-800">${category}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold text-gray-900">¥${amount.toLocaleString()}</div>
+                                    <div class="text-xs text-gray-500">${percentage}%</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        // 折れ線グラフを生成
+        function generateLineChart(dailyTotals) {
+            const dates = Object.keys(dailyTotals).sort();
+            
+            if (dates.length === 0) {
+                return '<div class="text-gray-500 text-sm flex items-center justify-center h-full">データなし</div>';
+            }
+            
+            const maxAmount = Math.max(...Object.values(dailyTotals));
+            const roundedMaxAmount = Math.round(maxAmount);
+            
+            // Y軸の目盛りを生成
+            const yAxisLabels = [];
+            for (let i = 0; i <= 5; i++) {
+                const value = Math.round((roundedMaxAmount / 5) * i);
+                yAxisLabels.push(value);
+            }
+            
+            // データポイントの座標を計算
+            const points = dates.map((date, index) => {
+                const amount = Math.round(dailyTotals[date]);
+                const x = (index / (dates.length - 1)) * 100; // 0-100%の範囲
+                const y = 100 - (amount / maxAmount) * 100; // 上から下へ（Y軸反転）
+                return { x, y, amount, date };
+            });
+            
+            // SVGパスを生成（滑らかな折れ線）
+            const pathData = points.map((point, index) => {
+                if (index === 0) {
+                    return `M ${point.x} ${point.y}`;
+                } else {
+                    const prevPoint = points[index - 1];
+                    const cp1x = prevPoint.x + (point.x - prevPoint.x) * 0.3;
+                    const cp1y = prevPoint.y;
+                    const cp2x = prevPoint.x + (point.x - prevPoint.x) * 0.7;
+                    const cp2y = point.y;
+                    return `C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${point.x} ${point.y}`;
+                }
+            }).join(' ');
+            
+            return `
+                <div class="flex h-full">
+                    <!-- Y軸 -->
+                    <div class="flex flex-col justify-between pr-2 text-xs text-gray-600">
+                        ${yAxisLabels.reverse().map(value => 
+                            `<div class="text-right">¥${value.toLocaleString()}</div>`
+                        ).join('')}
+                    </div>
+                    
+                    <!-- グラフエリア -->
+                    <div class="flex-1 relative px-2 py-2 border-l border-b border-gray-300">
+                        <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style="shape-rendering: geometricPrecision;">
+                            <!-- グリッド線 -->
+                            ${yAxisLabels.map((_, index) => {
+                                const y = (index / (yAxisLabels.length - 1)) * 100;
+                                return `<line x1="0" y1="${y}" x2="100" y2="${y}" stroke="#e5e7eb" stroke-width="0.2"/>`;
+                            }).join('')}
+                            
+                            <!-- 折れ線 -->
+                            <path d="${pathData}" 
+                                  fill="none" 
+                                  stroke="#3B82F6" 
+                                  stroke-width="1.5" 
+                                  stroke-linecap="round" 
+                                  stroke-linejoin="round"
+                                  style="filter: drop-shadow(0 1px 2px rgba(59, 130, 246, 0.3));"/>
+                            
+                            <!-- データポイント -->
+                            ${points.map(point => `
+                                <circle cx="${point.x}" 
+                                        cy="${point.y}" 
+                                        r="2.5" 
+                                        fill="#3B82F6" 
+                                        stroke="white" 
+                                        stroke-width="1.5"
+                                        style="filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));"
+                                        class="hover:r-4 transition-all cursor-pointer"
+                                        title="${new Date(point.date).toLocaleDateString('ja-JP')}: ¥${point.amount.toLocaleString()}"/>
+                            `).join('')}
+                        </svg>
+                        
+                        <!-- X軸ラベル -->
+                        <div class="absolute -bottom-6 left-0 right-0 flex justify-between px-2">
+                            ${dates.map(date => {
+                                const dateObj = new Date(date);
+                                const month = dateObj.getMonth() + 1;
+                                const day = dateObj.getDate();
+                                const dateLabel = `${month}/${day}`;
+                                return `<div class="text-xs text-gray-500 transform -rotate-45 origin-left whitespace-nowrap">${dateLabel}</div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 円グラフを生成（データがある場合のみ）
+        function generatePieChart(categoryTotals, totalAmount) {
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+            let currentAngle = 0;
+            
+            console.log('円グラフ生成:', { categoryTotals, totalAmount });
+            
+            // 角度の合計を計算
+            const totalAngle = Object.values(categoryTotals).reduce((sum, amount) => {
+                return sum + ((amount / totalAmount) * 360);
+            }, 0);
+            
+            console.log('角度の合計:', totalAngle.toFixed(2) + '°');
+            
+            // 角度の正規化係数を計算（360度に調整）
+            const normalizeFactor = totalAngle > 0 ? 360 / totalAngle : 1;
+            
+            console.log('正規化係数:', normalizeFactor.toFixed(4));
+            
+            return `<svg viewBox="0 0 128 128" class="w-full h-full">` +
+                Object.entries(categoryTotals).map(([category, amount], index) => {
+                    const percentage = (amount / totalAmount) * 100;
+                    const angle = (percentage / 100) * 360 * normalizeFactor; // 正規化を適用
+                    const color = colors[index % colors.length];
+                    
+                    console.log(`カテゴリ: ${category}, 金額: ${amount}, 割合: ${percentage.toFixed(2)}%, 正規化後角度: ${angle.toFixed(2)}°`);
+                    
+                    const startAngle = currentAngle;
+                    const endAngle = currentAngle + angle;
+                    const pathData = generatePieSlice(64, 64, 50, startAngle, endAngle);
+                    currentAngle += angle;
+                    
+                    return `<path d="${pathData}" fill="${color}" stroke="white" stroke-width="2"/>`;
+                }).join('') + `</svg>`;
+        }
+        
+        // 円グラフのスライスパスを生成
+        function generatePieSlice(cx, cy, radius, startAngle, endAngle) {
+            const start = polarToCartesian(cx, cy, radius, endAngle);
+            const end = polarToCartesian(cx, cy, radius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            
+            return [
+                "M", cx, cy,
+                "L", start.x, start.y,
+                "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+                "Z"
+            ].join(" ");
+        }
+        
+        // 極座標から直交座標に変換
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+        
+        // 円グラフの凡例を生成（データがある場合のみ）
+        function generatePieChartLegend(categoryTotals) {
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+            
+            return Object.entries(categoryTotals).map(([category, amount], index) => {
+                const color = colors[index % colors.length];
+                return `
+                    <div class="flex items-center text-xs">
+                        <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${color};"></div>
+                        <span class="text-gray-700">${category}: ¥${amount.toLocaleString()}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // ページ読み込み時にFirebase関数を読み込み
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFirebaseFunctions();
+            
+            // デフォルトで全期間を設定
+            setPeriod('all');
+            
+            // 今日の日付をデフォルトで設定
+            const today = new Date().toISOString().split('T')[0];
+            const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            document.getElementById('endDate').value = today;
+            document.getElementById('startDate').value = oneMonthAgo;
+            
+            // 自動でグラフを読み込み
+            setTimeout(() => {
+                loadGraphData();
+            }, 1000);
+        });
+    </script>
 </body>
 </html>

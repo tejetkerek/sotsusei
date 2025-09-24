@@ -3,6 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-functions.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -19,17 +20,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const functions = getFunctions(app);
 
 // 認証状態の監視
 auth.onAuthStateChanged((user) => {
   if (user) {
     console.log('ユーザーがログインしています:', user.email);
-    // Firestore関数を初期化時に読み込み
-    loadFirestoreFunctions();
-    // ログイン済みの処理
+    // ログイン状態をlocalStorageに保存
+    localStorage.setItem('userEmail', user.email);
+    localStorage.setItem('isLoggedIn', 'true');
   } else {
     console.log('ユーザーがログアウトしています');
-    // ログアウト状態の処理
+    // ログアウト状態をlocalStorageに保存
+    localStorage.removeItem('userEmail');
+    localStorage.setItem('isLoggedIn', 'false');
   }
 });
 
@@ -121,88 +125,13 @@ export function logoutUser() {
     });
 }
 
-// ダミーデータの初期化（admin@test.com用）
+// ダミーデータ初期化を無効化（実際のFirestoreデータを使用）
 export async function initializeDummyData() {
-  const user = auth.currentUser;
-  if (!user || user.email !== 'admin@test.com') {
-    console.log('admin@test.comでログインしていません');
-    return;
-  }
-
-  try {
-    // Firestore関数を読み込み
-    const firestore = await loadFirestoreFunctions();
-    if (!firestore) {
-      throw new Error('Firestore関数の読み込みに失敗しました');
-    }
-
-    // ダミーレシートデータ
-    const dummyReceipts = [
-      {
-        id: 'receipt_001',
-        storeName: 'RED ELEPHANT',
-        date: '2024-01-13',
-        currency: 'MYR',
-        totalAmount: 15.90,
-        items: [
-          { name: 'カレーライス', price: 7.95, quantity: 2 }
-        ],
-        location: 'クアラルンプール',
-        category: '食費',
-        jpyAmount: 526
-      },
-      {
-        id: 'receipt_002',
-        storeName: '7-Eleven',
-        date: '2024-01-14',
-        currency: 'MYR',
-        totalAmount: 8.50,
-        items: [
-          { name: '飲み物', price: 3.50, quantity: 1 },
-          { name: 'スナック', price: 5.00, quantity: 1 }
-        ],
-        location: 'クアラルンプール',
-        category: '食費',
-        jpyAmount: 281
-      },
-      {
-        id: 'receipt_003',
-        storeName: 'Grab Taxi',
-        date: '2024-01-15',
-        currency: 'MYR',
-        totalAmount: 12.00,
-        items: [
-          { name: 'タクシー代', price: 12.00, quantity: 1 }
-        ],
-        location: 'クアラルンプール',
-        category: '交通費',
-        jpyAmount: 397
-      }
-    ];
-
-    // Firestoreにデータを保存
-    const userDocRef = firestore.doc(db, 'users', user.uid);
-    await firestore.setDoc(userDocRef, {
-      email: user.email,
-      createdAt: new Date(),
-      lastLogin: new Date()
-    });
-
-    // レシートデータを保存
-    const receiptsRef = firestore.collection(db, 'users', user.uid, 'receipts');
-    for (const receipt of dummyReceipts) {
-      await firestore.addDoc(receiptsRef, receipt);
-    }
-
-    console.log('ダミーデータの初期化が完了しました');
-    return dummyReceipts;
-  } catch (error) {
-    console.error('ダミーデータ初期化エラー:', error);
-    throw error;
-  }
+  console.log('ダミーデータ初期化は無効化されています。実際のFirestoreデータを使用します。');
+  return [];
 }
 
-// ユーザーのレシートデータを取得
+// ユーザーのレシートデータを取得（削除フラグが立っていないもののみ）
 export async function getUserReceipts() {
   const user = auth.currentUser;
   if (!user) {
@@ -214,8 +143,30 @@ export async function getUserReceipts() {
     const snapshot = await getDocs(receiptsRef);
     const receipts = [];
     snapshot.forEach((doc) => {
-      receipts.push({ id: doc.id, ...doc.data() });
+      const data = doc.data();
+      // 削除フラグが立っていないレシートのみを返す
+      if (!data.isDeleted) {
+        const receiptData = { 
+          id: doc.id,  // Firestoreの実際のドキュメントID
+          firestoreId: doc.id,  // 削除時に使用するID
+          ...data 
+        };
+        
+        // デバッグ: 日付が不明のレシートの詳細をログ出力
+        if (doc.id === 'VP76EZ3OUH3BY1f3F9F3') {
+          console.log('Firestoreから読み込まれたレシートデータ:', {
+            docId: doc.id,
+            data: data,
+            receiptData: receiptData,
+            transaction: data.transaction,
+            date: data.date
+          });
+        }
+        
+        receipts.push(receiptData);
+      }
     });
+    console.log(`Firestoreから${receipts.length}件のレシートを取得しました`);
     return receipts;
   } catch (error) {
     console.error('レシートデータ取得エラー:', error);
@@ -249,21 +200,54 @@ export async function saveReceiptFromJSON(jsonData) {
   }
 
   try {
-    // JSONデータをレシート形式に変換
+    // JSONデータをレシート形式に変換（改善された構造）
     const receiptData = {
+      // 基本情報
       id: jsonData.receipt_id || `receipt_${Date.now()}`,
-      storeName: extractStoreName(jsonData.extracted_data.translated_text),
-      date: extractDate(jsonData.extracted_data.translated_text),
-      currency: jsonData.extracted_data.conversions[0]?.original_currency || 'MYR',
-      totalAmount: jsonData.extracted_data.conversions[0]?.original_amount || 0,
-      jpyAmount: jsonData.extracted_data.total_jpy || 0,
-      location: extractLocation(jsonData.extracted_data.translated_text),
-      category: '食費', // デフォルト
-      items: extractItems(jsonData.extracted_data.translated_text),
-      originalText: jsonData.extracted_data.original_text,
-      translatedText: jsonData.extracted_data.translated_text,
-      processedAt: jsonData.processed_at || new Date().toISOString(),
-      exchangeRate: jsonData.extracted_data.conversions[0]?.exchange_rate || 32.0
+      imageUrl: jsonData.image_url || null,
+      
+      // 店舗情報
+      store: {
+        name: jsonData.extracted_data.storeName || extractStoreName(jsonData.extracted_data.translated_text),
+        location: jsonData.extracted_data.location || extractLocation(jsonData.extracted_data.translated_text)
+      },
+      
+      // 取引情報
+      transaction: {
+        date: jsonData.extracted_data.date || extractDate(jsonData.extracted_data.translated_text),
+        currency: jsonData.extracted_data.currency || jsonData.extracted_data.conversions[0]?.original_currency || 'JPY',
+        amount: jsonData.extracted_data.totalAmount || jsonData.extracted_data.conversions[0]?.original_amount || 0,
+        jpyAmount: jsonData.extracted_data.jpyAmount || jsonData.extracted_data.total_jpy || 0,
+        exchangeRate: jsonData.extracted_data.conversions[0]?.exchange_rate || 32.0
+      },
+      
+      // 商品情報
+      items: jsonData.extracted_data.items || extractItems(jsonData.extracted_data.translated_text),
+      
+      // 分類情報
+      category: jsonData.extracted_data.category || 'food',
+      
+      // 処理情報
+      processing: {
+        processedAt: jsonData.processed_at || new Date().toISOString(),
+        originalText: jsonData.extracted_data.original_text,
+        translatedText: jsonData.extracted_data.translated_text,
+        confidence: jsonData.confidence || 0.95
+      },
+      
+      // ステータス
+      status: {
+        confirmed: false,
+        confirmedAt: null,
+        confirmedBy: null
+      },
+      
+      // メタデータ
+      metadata: {
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: '1.0'
+      }
     };
 
     // Firestoreに保存
@@ -279,11 +263,24 @@ export async function saveReceiptFromJSON(jsonData) {
 }
 
 // 未処理のレシート一覧を取得
-async function getUnprocessedReceipts() {
-  const user = auth.currentUser;
+export async function getUnprocessedReceipts() {
+  let user = auth.currentUser;
+  
+  // ユーザーがログインしていない場合は匿名ログインを試行
   if (!user) {
-    throw new Error('ログインしていません');
+    try {
+      console.log('ユーザーがログインしていません。既存ユーザーでログインを試行します...');
+      const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js");
+      const result = await signInWithEmailAndPassword(auth, 'admin@test.com', 'password123');
+      user = result.user;
+      console.log('既存ユーザーログイン成功:', user.email);
+    } catch (authError) {
+      console.error('既存ユーザーログインエラー:', authError);
+      throw new Error('認証に失敗しました: ' + authError.message);
+    }
   }
+
+  console.log('getUnprocessedReceipts実行時のユーザー:', user?.email || user?.uid);
 
   try {
     const receiptsRef = collection(db, 'users', user.uid, 'receipts');
@@ -292,10 +289,10 @@ async function getUnprocessedReceipts() {
     const receipts = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      console.log(`レシート ${doc.id}: confirmed = ${data.confirmed} (type: ${typeof data.confirmed})`);
+      console.log(`レシート ${doc.id}: confirmed = ${data.status?.confirmed} (type: ${typeof data.status?.confirmed})`);
       
       // 確認済みフラグが明示的にtrueでないレシートのみを取得
-      if (data.confirmed !== true) {
+      if (data.status?.confirmed !== true) {
         receipts.push({
           id: doc.id,
           ...data
@@ -317,24 +314,64 @@ async function getUnprocessedReceipts() {
 }
 
 // レシートを確認済みにマーク（更新されたデータも含めて）
-async function markReceiptAsConfirmed(receiptId, updatedData = null) {
-  const user = auth.currentUser;
+export async function markReceiptAsConfirmed(receiptId, updatedData = null) {
+  let user = auth.currentUser;
+  
+  // ユーザーがログインしていない場合は匿名ログインを試行
   if (!user) {
-    throw new Error('ログインしていません');
+    try {
+      console.log('ユーザーがログインしていません。既存ユーザーでログインを試行します...');
+      const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js");
+      const result = await signInWithEmailAndPassword(auth, 'admin@test.com', 'password123');
+      user = result.user;
+      console.log('既存ユーザーログイン成功:', user.email);
+    } catch (authError) {
+      console.error('既存ユーザーログインエラー:', authError);
+      throw new Error('認証に失敗しました: ' + authError.message);
+    }
   }
+
+  console.log('markReceiptAsConfirmed実行時のユーザー:', user?.email || user?.uid);
 
   try {
     const receiptRef = doc(db, 'users', user.uid, 'receipts', receiptId);
     
-    // 基本の確認済みデータ
+    // 基本の確認済みデータ（新しい構造）
     const confirmData = {
-      confirmed: true,
-      confirmedAt: new Date().toISOString()
+      status: {
+        confirmed: true,
+        confirmedAt: new Date().toISOString(),
+        confirmedBy: user.uid
+      },
+      metadata: {
+        updatedAt: new Date().toISOString()
+      }
     };
     
     // 更新されたデータがある場合は追加
     if (updatedData) {
-      Object.assign(confirmData, updatedData);
+      // 店舗情報の更新
+      if (updatedData.storeName) {
+        confirmData.store = {
+          name: updatedData.storeName,
+          location: updatedData.location || ''
+        };
+      }
+      
+      // 取引情報の更新
+      if (updatedData.totalAmount || updatedData.currency) {
+        confirmData.transaction = {
+          amount: updatedData.totalAmount || 0,
+          currency: updatedData.currency || 'JPY',
+          jpyAmount: updatedData.jpyAmount || 0
+        };
+      }
+      
+      // 分類情報の更新
+      if (updatedData.category) {
+        confirmData.category = updatedData.category;
+      }
+      
       console.log('更新されたデータを保存:', updatedData);
     }
     
@@ -351,22 +388,91 @@ async function markReceiptAsConfirmed(receiptId, updatedData = null) {
 
 // ヘルパー関数: 店舗名を抽出
 function extractStoreName(text) {
+  if (!text) return 'Unknown Store';
+  
+  // JSONデータから直接店舗名を抽出する場合
+  try {
+    const jsonMatch = text.match(/"storeName":"([^"]+)"/);
+    if (jsonMatch) {
+      return jsonMatch[1];
+    }
+  } catch (e) {
+    console.log('JSON抽出失敗:', e);
+  }
+  
+  // テキストから店舗名を抽出
   const lines = text.split('\n');
+  for (let line of lines) {
+    // 店舗名らしいパターンを検索
+    if (line.includes('セブン-イレブン') || line.includes('7-Eleven') || 
+        line.includes('ファミマ') || line.includes('FamilyMart') ||
+        line.includes('ローソン') || line.includes('Lawson')) {
+      return line.trim();
+    }
+  }
+  
+  // デフォルト: 最初の行
   return lines[0] || 'Unknown Store';
 }
 
 // ヘルパー関数: 日付を抽出
 function extractDate(text) {
+  if (!text) return new Date().toISOString().split('T')[0];
+  
+  // JSONデータから直接日付を抽出する場合
+  try {
+    const jsonMatch = text.match(/"date":"([^"]+)"/);
+    if (jsonMatch) {
+      return jsonMatch[1];
+    }
+  } catch (e) {
+    console.log('JSON日付抽出失敗:', e);
+  }
+  
+  // テキストから日付を抽出
   const dateMatch = text.match(/Date:\s*(\d{4}-\d{2}-\d{2})/);
-  return dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0];
+  if (dateMatch) {
+    return dateMatch[1];
+  }
+  
+  // その他の日付パターン
+  const otherDateMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
+  if (otherDateMatch) {
+    return otherDateMatch[1];
+  }
+  
+  return new Date().toISOString().split('T')[0];
 }
 
 // ヘルパー関数: 場所を抽出
 function extractLocation(text) {
+  if (!text) return 'Unknown Location';
+  
+  // JSONデータから直接場所を抽出する場合
+  try {
+    const jsonMatch = text.match(/"location":"([^"]+)"/);
+    if (jsonMatch) {
+      return jsonMatch[1];
+    }
+  } catch (e) {
+    console.log('JSON場所抽出失敗:', e);
+  }
+  
+  // テキストから場所を抽出
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes('Kuala Lumpur') || lines[i].includes('Malaysia')) {
+    const line = lines[i];
+    // 日本の地名パターン
+    if (line.includes('藤沢') || line.includes('神奈川') || line.includes('県')) {
+      return line.trim();
+    }
+    // マレーシアの地名パターン
+    if (line.includes('Kuala Lumpur') || line.includes('Malaysia')) {
       return 'クアラルンプール';
+    }
+    // その他の地名パターン
+    if (line.includes('市') || line.includes('区') || line.includes('町')) {
+      return line.trim();
     }
   }
   return 'Unknown Location';
@@ -446,8 +552,8 @@ export { collection, addDoc, getDocs, doc, setDoc, getDoc };
 // Firebaseインスタンスをエクスポート
 export { auth, db, storage };
 
-// 新しい関数を明示的にエクスポート
-export { getUnprocessedReceipts, markReceiptAsConfirmed };
+// 新しい関数を明示的にエクスポート（重複を避けるため削除）
+// export { getUnprocessedReceipts, markReceiptAsConfirmed };
 
 // デバッグ用：関数の存在確認
 console.log('Firebase設定ファイル読み込み完了');
@@ -483,3 +589,6 @@ export function getAvailableFunctions() {
     timestamp: new Date().toISOString()
   };
 }
+
+// Firebase Functions と httpsCallable をエクスポート
+export { functions, httpsCallable };

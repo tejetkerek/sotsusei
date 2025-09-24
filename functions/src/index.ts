@@ -27,7 +27,13 @@ export const analyzeReceipt = functions.https.onCall(async (data, context) => {
 
     1. 店舗名 (storeName)
     2. 日付 (date) - YYYY-MM-DD形式
-    3. 通貨 (currency) - 3文字の通貨コード (JPY, USD, EUR等)
+    3. 通貨 (currency) - レシートに表示されている通貨記号や通貨名から自動判定してください
+       - ¥, 円, JPY → "JPY"
+       - $, USD, Dollar → "USD" 
+       - €, EUR, Euro → "EUR"
+       - £, GBP, Pound → "GBP"
+       - RM, Ringgit → "MYR"
+       - その他の通貨記号があれば適切な3文字コードに変換
     4. 合計金額 (totalAmount) - 数値のみ
     5. 場所 (location) - 都市名や国名
     6. 商品リスト (items) - 商品名と価格の配列

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>海外レシート管理マスター - ステップ2/3：確認&修正</title>
+    <title>海外レシート管理マスター - ステップ2/3：確認&修正 v2.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script>
@@ -21,64 +21,30 @@
 </head>
 <body class="bg-base-100 min-h-screen">
     <div class="min-h-screen bg-gray-100 flex">
-        <!-- 左端の開発中リスト -->
-        <div class="bg-yellow-100 border-r border-yellow-300 p-2 w-20 flex flex-col items-center">
-            <div class="text-xs text-gray-700 space-y-2">
-                <a href="registration_step1.html" class="block text-blue-600 hover:underline writing-vertical-rl">1.登録</a>
-                <a href="registration_step2.html" class="block text-gray-500 writing-vertical-rl">2.確認</a>
-                <a href="registration_step3.html" class="block text-blue-600 hover:underline writing-vertical-rl">3.サマリ</a>
-                <a href="registration_signup.html" class="block text-blue-600 hover:underline writing-vertical-rl">4.会員</a>
-                <a href="registration_memories.html" class="block text-blue-600 hover:underline writing-vertical-rl">5.想い出</a>
-            </div>
-        </div>
         
         <div class="flex-1 flex justify-center">
             <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
             <!-- ステータスバー -->
-            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm">
+            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm relative">
                 <span class="font-medium">海外レシート管理マスター</span>
+                <div id="userInfo" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs">
+                    <span class="loading loading-spinner loading-xs"></span>
+                    <span class="ml-1">読み込み中...</span>
+                </div>
             </div>
             
             <div class="px-4 py-6">
             <!-- ヘッダー -->
             <div class="text-center mb-6">
-                <h1 class="text-xl font-bold text-gray-800">確認</h1>
-                <!-- プログレスバー -->
-                <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 66%"></div>
-                </div>
             </div>
 
-            <!-- レシート一覧 -->
-            <div class="mb-4">
-                <h2 class="text-lg font-semibold mb-3 text-gray-800">登録レシート一覧 (3件中 1件目)</h2>
-                
-                <!-- レシート番号表示 -->
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-sm text-gray-600">処理済み: 0件</span>
-                    <span class="text-sm text-gray-600">残り: 3件</span>
-                </div>
-            </div>
             
             <!-- 現在のレシート -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
-                <div class="p-4">
+                <div class="p-4" id="receiptContent">
                     <!-- 現在のレシート -->
                     <div class="border border-gray-200 rounded-lg p-3 mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm font-medium text-blue-600">現在処理中</span>
-                            <span class="text-xs text-gray-500">1/3</span>
-                        </div>
                         
-                        <!-- プレビューエリア -->
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg h-32 mb-3 flex items-center justify-center bg-gray-50" id="receiptPreview">
-                            <div class="text-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <span class="text-gray-500 text-xs">RED ELEPHANT</span>
-                            </div>
-                        </div>
                         
                         <!-- レシート情報表示 -->
                         <div class="space-y-2">
@@ -114,22 +80,70 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- 次のレシートプレビュー -->
-                    <div class="border border-gray-100 rounded-lg p-2 bg-gray-50">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs text-gray-500">次のレシート</span>
-                            <span class="text-xs text-gray-500">2/3</span>
-                        </div>
-                        <div class="border border-gray-200 rounded h-16 flex items-center justify-center bg-white">
-                            <span class="text-xs text-gray-400">レシート画像プレビュー</span>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <!-- レシート毎の確認ボタンは各レシート内に表示 -->
+        <!-- メインアクションボタン（ロケーションの下に表示） -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <div class="grid grid-cols-2 gap-3">
+                <!-- 修正ボタン -->
+                <button onclick="openEditModal()" class="btn bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span class="whitespace-nowrap text-xs leading-tight">内容を修正する</span>
+                </button>
+                
+                <!-- 承認ボタン -->
+                <button onclick="handleConfirmation()" class="btn bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-2 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="whitespace-nowrap text-xs leading-tight">承認して登録する</span>
+                </button>
             </div>
+        </div>
+
+        <!-- その他のアクション（リンクテキスト） -->
+        <div class="space-y-3 mb-4">
+            <!-- 新規レシート追加リンク -->
+            <div class="text-center">
+                <a href="registration_step1.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
+                    新たなレシートを追加する
+                </a>
+            </div>
+            
+            <!-- サマリ表示リンク -->
+            <div class="text-center">
+                <a href="registration_step3.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
+                    登録済みレシートのサマリーへ
+                </a>
+            </div>
+        </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 編集モーダル -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800" id="editModalTitle">項目を編集</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2" id="editModalLabel">値</label>
+                <div id="editModalInput"></div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeEditModal()" class="btn btn-outline btn-sm">キャンセル</button>
+                <button onclick="saveEdit()" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-sm">保存</button>
             </div>
         </div>
     </div>
@@ -146,12 +160,46 @@
         // Firebase関数を読み込み
         async function loadFirebaseFunctions() {
             try {
-                console.log('Firebaseモジュールを読み込み中...');
+                console.log('Firebaseモジュールを読み込み中... (v2.1)');
+                
+                // ローディング表示を更新
+                const content = document.getElementById('receiptContent');
+                if (!content) {
+                    console.error('receiptContent要素が見つかりません');
+                    return;
+                }
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="loading loading-spinner loading-lg text-blue-600 mb-4"></div>
+                        <p class="text-gray-600">Firebase関数を読み込み中...</p>
+                        <p class="text-xs text-gray-500 mt-2">データベース接続を確立しています</p>
+                    </div>
+                `;
                 
                 // モジュールを読み込み
                 const firebaseModule = await import('./firebase-config.js');
                 console.log('Firebaseモジュール:', firebaseModule);
                 console.log('モジュールのキー:', Object.keys(firebaseModule));
+                
+                // 認証状態を確認（firebase-config.jsの認証状態を信頼）
+                if (firebaseModule.auth) {
+                    const user = firebaseModule.auth.currentUser;
+                    console.log('現在のユーザー:', user);
+                    
+                    if (!user) {
+                        console.log('ユーザーがログインしていません。firebase-config.jsの認証状態を待機します...');
+                        // 認証状態の変化を待機
+                        await new Promise((resolve) => {
+                            const unsubscribe = firebaseModule.auth.onAuthStateChanged((user) => {
+                                unsubscribe();
+                                console.log('認証状態変化を検出:', user?.email || 'ログアウト');
+                                resolve();
+                            });
+                        });
+                    } else {
+                        console.log('ユーザーは既にログインしています:', user.uid);
+                    }
+                }
                 
                 // 各関数の存在確認
                 console.log('getUnprocessedReceipts:', firebaseModule.getUnprocessedReceipts);
@@ -161,9 +209,9 @@
                 // 関数の存在確認
                 if (!firebaseModule.getUnprocessedReceipts) {
                     console.error('getUnprocessedReceipts関数が見つかりません');
-                console.log('利用可能な関数:', Object.keys(firebaseModule));
-                console.log('関数名の詳細:', Object.keys(firebaseModule).filter(key => key.includes('Receipt')));
-                console.log('すべての関数名:', Object.keys(firebaseModule));
+                    console.log('利用可能な関数:', Object.keys(firebaseModule));
+                    console.log('関数名の詳細:', Object.keys(firebaseModule).filter(key => key.includes('Receipt')));
+                    console.log('すべての関数名:', Object.keys(firebaseModule));
                     showErrorMessage('getUnprocessedReceipts関数が見つかりません');
                     return;
                 }
@@ -183,6 +231,9 @@
                 
                 console.log('Firebase関数の読み込み完了:', firebaseFunctions);
                 console.log('getUnprocessedReceipts関数の型:', typeof firebaseFunctions.getUnprocessedReceipts);
+                
+                // ユーザー情報を更新
+                updateUserInfo();
                 
                 // 利用可能な関数を確認
                 if (firebaseModule.getAvailableFunctions) {
@@ -220,6 +271,13 @@
                 currentIndex = 0;
                 updateReceiptDisplay();
                 updateProgressInfo();
+                
+                // ローディング表示をクリア
+                const content = document.getElementById('receiptContent');
+                if (content) {
+                    // ローディング表示を削除（実際のレシート表示はupdateReceiptDisplayで行われる）
+                    console.log('ローディング表示をクリアしました');
+                }
             } catch (error) {
                 console.error('レシート読み込みエラー:', error);
                 showErrorMessage(`レシートの読み込みに失敗しました: ${error.message}`);
@@ -232,119 +290,211 @@
             
             const receipt = currentReceipts[currentIndex];
             console.log('レシート表示更新:', receipt);
+            console.log('レシート画像URL:', receipt.imageUrl);
+            console.log('レシートの全プロパティ:', Object.keys(receipt));
             
-            // ヘッダー情報を更新
-            const headerElement = document.querySelector('h2');
-            if (headerElement) {
-                headerElement.textContent = `登録レシート一覧 (${currentReceipts.length}件中 ${currentIndex + 1}件目)`;
+            // 画像URLの詳細確認
+            if (receipt.imageUrl) {
+                console.log('画像URLが存在:', receipt.imageUrl);
+            } else {
+                console.log('画像URLが存在しません');
+                // 代替の画像URLプロパティを確認
+                console.log('代替プロパティ確認:');
+                console.log('- image_url:', receipt.image_url);
+                console.log('- imageUrl:', receipt.imageUrl);
+                console.log('- image:', receipt.image);
             }
             
-            // レシート画像を更新
-            const receiptPreview = document.getElementById('receiptPreview');
-            if (receiptPreview) {
-                console.log('レシートプレビュー要素を発見:', receiptPreview);
+            // ローディング表示を確実にクリア
+            const content = document.getElementById('receiptContent');
+            if (content) {
+                content.innerHTML = ''; // 既存の内容をクリア
+                console.log('receiptContentをクリアしました');
+            }
+            
+            
+            
+            // レシート情報を更新（HTMLの構造に合わせて修正）
+            const receiptInfoContainer = document.querySelector('.space-y-2');
+            if (receiptInfoContainer) {
+                console.log('レシート情報コンテナを発見:', receiptInfoContainer);
                 
-                if (receipt.imageUrl) {
-                    // 画像が存在する場合
-                    receiptPreview.innerHTML = `
-                        <img src="${receipt.imageUrl}" alt="レシート画像" class="w-full h-full object-contain rounded-lg" 
-                             onerror="this.parentElement.innerHTML='<div class=\\"text-center\\"><svg xmlns=\\"http://www.w3.org/2000/svg\\" class=\\"h-8 w-8 mx-auto text-gray-400 mb-1\\" fill=\\"none\\" viewBox=\\"0 0 24 24\\" stroke=\\"currentColor\\"><path stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\" stroke-width=\\"2\\" d=\\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\\" /></svg><span class=\\"text-gray-500 text-xs\\">${receipt.storeName || 'Unknown Store'}</span></div>'">
-                    `;
-                    console.log('レシート画像を表示:', receipt.imageUrl);
-                } else {
-                    // 画像が存在しない場合、デフォルト表示
-                    receiptPreview.innerHTML = `
-                        <div class="text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span class="text-gray-500 text-xs">画像データなし</span>
-                        </div>
-                    `;
-                    console.log('画像データなしを表示');
+                // 店舗名を更新
+                const storeNameElement = receiptInfoContainer.querySelector('span.font-medium.text-gray-800');
+                if (storeNameElement) {
+                    storeNameElement.textContent = receipt.store?.name || receipt.storeName || '店舗名不明';
+                    console.log('店舗名を更新:', storeNameElement.textContent);
                 }
-            } else {
-                console.error('レシートプレビュー要素が見つかりません');
-            }
-            
-            // レシート情報を更新（より具体的なセレクターを使用）
-            const storeNameElement = document.querySelector('.bg-white .text-gray-500.text-xs');
-            if (storeNameElement) {
-                console.log('店舗名要素を発見:', storeNameElement);
-                storeNameElement.textContent = receipt.storeName || 'Unknown Store';
-            } else {
-                console.error('店舗名要素が見つかりません');
-            }
-            
-            // レシート詳細情報を更新（より具体的なセレクターを使用）
-            const detailsContainer = document.querySelector('.bg-white .space-y-2');
-            if (detailsContainer) {
-                console.log('レシート詳細情報のコンテナを発見:', detailsContainer);
-                // 既存の内容をクリア
-                detailsContainer.innerHTML = '';
                 
-                // 新しい内容を追加（編集可能なフィールド）
-                const detailsHTML = `
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">店舗名:</span>
-                        <input type="text" id="storeNameInput" value="${receipt.storeName || ''}" 
-                               class="input input-bordered input-xs w-24 text-xs" placeholder="店舗名">
-                    </div>
+                // 金額を更新
+                const amountElements = receiptInfoContainer.querySelectorAll('span.font-medium.text-gray-800');
+                if (amountElements.length > 1) {
+                    const amountElement = amountElements[2]; // 金額の要素
+                    if (amountElement) {
+                        const currency = receipt.transaction?.currency || 'JPY';
+                        const amount = receipt.transaction?.amount || 0;
+                        amountElement.textContent = `${currency} ${amount}`;
+                        console.log('金額を更新:', amountElement.textContent);
+                    }
+                }
+                
+                // 日本円換算を更新
+                const jpyElement = receiptInfoContainer.querySelector('span.font-medium.text-blue-600');
+                if (jpyElement) {
+                    const jpyAmount = receipt.transaction?.jpyAmount || 0;
+                    jpyElement.textContent = `¥ ${jpyAmount}`;
+                    console.log('日本円換算を更新:', jpyElement.textContent);
+                }
+                
+            } else {
+                console.error('レシート情報コンテナが見つかりません');
+            }
+            
+            // レシート詳細情報を更新（動的にフィールドを生成）
+            const detailsContainer = document.querySelector('.bg-white .space-y-2');
+            if (!detailsContainer) {
+                // 別のセレクターで探す
+                const altDetailsContainer = document.querySelector('.space-y-2');
+                if (altDetailsContainer) {
+                    console.log('レシート詳細情報のコンテナを代替セレクターで発見:', altDetailsContainer);
+                }
+            }
+            
+            const finalDetailsContainer = document.querySelector('.bg-white .space-y-2') || document.querySelector('.space-y-2');
+            if (finalDetailsContainer) {
+                console.log('レシート詳細情報のコンテナを発見:', finalDetailsContainer);
+                console.log('レシートデータ:', receipt);
+                
+                // 既存の内容をクリア
+                finalDetailsContainer.innerHTML = '';
+                
+                // データのサニタイズ（XSS対策）
+                const sanitizeValue = (value) => {
+                    if (value === null || value === undefined) return '';
+                    return String(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                };
+                
+                // 日付のフォーマット（YYYY-MM-DD形式に変換）
+                const formatDate = (dateString) => {
+                    try {
+                        if (!dateString) return '';
+                        
+                        // 既にYYYY-MM-DD形式の場合はそのまま返す
+                        if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                            return dateString;
+                        }
+                        
+                        const date = new Date(dateString);
+                        if (isNaN(date.getTime())) {
+                            console.warn('無効な日付形式:', dateString);
+                            return '';
+                        }
+                        return date.toISOString().split('T')[0];
+                    } catch (error) {
+                        console.error('日付フォーマットエラー:', error, '入力値:', dateString);
+                        return '';
+                    }
+                };
+                
+                // 動的にフィールドを生成する関数（テキスト表示 + 編集ボタン）
+                const generateFieldHTML = (label, value, fieldType, fieldId) => {
+                    let displayValue = '';
+                    if (fieldType === 'currency') {
+                        const amount = getNestedValue(receipt, 'transaction.amount') || 0;
+                        displayValue = `${sanitizeValue(value)} ${amount}`;
+                    } else if (fieldType === 'display') {
+                        displayValue = `¥ ${sanitizeValue(value)}`;
+                    } else {
+                        displayValue = sanitizeValue(value);
+                    }
                     
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">日付:</span>
-                        <input type="date" id="dateInput" value="${receipt.date || ''}" 
-                               class="input input-bordered input-xs w-24 text-xs">
-                    </div>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">金額:</span>
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">${receipt.currency || 'JPY'}</span>
-                            <input type="number" id="amountInput" value="${receipt.totalAmount || 0}" 
-                                   class="input input-bordered input-xs w-16 text-xs" step="0.01" placeholder="金額">
+                    return `
+                        <div class="flex justify-between items-center text-sm group">
+                            <span class="text-gray-600">${label}:</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-gray-800" id="${fieldId}_display">${displayValue}</span>
+                                <button onclick="editField('${fieldId}', '${fieldType}', '${sanitizeValue(value)}')" 
+                                        class="btn btn-xs btn-outline opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">日本円換算:</span>
-                        <span class="font-medium text-blue-600">¥ ${receipt.jpyAmount || 0}</span>
-                    </div>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">場所:</span>
-                        <input type="text" id="locationInput" value="${receipt.location || ''}" 
-                               class="input input-bordered input-xs w-24 text-xs" placeholder="場所">
-                    </div>
-                    
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">カテゴリ:</span>
-                        <select class="select select-bordered select-xs border-gray-300 w-20 text-xs" id="categorySelect">
-                            <option value="food" ${receipt.category === 'food' ? 'selected' : ''}>食費</option>
-                            <option value="transport" ${receipt.category === 'transport' ? 'selected' : ''}>交通費</option>
-                            <option value="shopping" ${receipt.category === 'shopping' ? 'selected' : ''}>お買い物</option>
-                            <option value="entertainment" ${receipt.category === 'entertainment' ? 'selected' : ''}>娯楽</option>
-                            <option value="other" ${receipt.category === 'other' ? 'selected' : ''}>その他</option>
-                        </select>
-                    </div>
-                    
-                    <!-- レシート毎の確認ボタン -->
+                    `;
+                };
+                
+                // レシートデータの項目を動的に生成
+                let fieldsHTML = '';
+                
+                // 基本的なフィールドを順番に生成（新しい構造に対応）
+                const fieldConfigs = [
+                    { key: 'store.name', label: '店舗名', type: 'text', id: 'storeNameInput' },
+                    { key: 'transaction.date', label: '日付', type: 'date', id: 'dateInput' },
+                    { key: 'transaction.currency', label: '通貨', type: 'currency', id: 'amountInput' },
+                    { key: 'transaction.jpyAmount', label: '日本円換算', type: 'display', id: 'jpyAmountDisplay' },
+                    { key: 'store.location', label: '場所', type: 'text', id: 'locationInput' },
+                    { key: 'category', label: 'カテゴリ', type: 'select', id: 'categorySelect' }
+                ];
+                
+                // ネストされたプロパティの値を取得する関数
+                const getNestedValue = (obj, path) => {
+                    return path.split('.').reduce((current, key) => current?.[key], obj);
+                };
+                
+                // 各フィールドを生成
+                fieldConfigs.forEach(config => {
+                    const value = getNestedValue(receipt, config.key);
+                    if (value !== undefined && value !== null && value !== '') {
+                        fieldsHTML += generateFieldHTML(config.label, value, config.type, config.id);
+                    }
+                });
+                
+                // 追加のフィールド（items、originalText等）がある場合
+                if (receipt.items && receipt.items.length > 0) {
+                    fieldsHTML += `
+                        <div class="flex justify-between items-start text-sm">
+                            <span class="text-gray-600">商品:</span>
+                            <div class="text-xs text-gray-800 max-w-32">
+                                ${receipt.items.map(item => {
+                                    const name = item.name || item.item || item;
+                                    const price = item.price || item.amount || '0';
+                                    return `${sanitizeValue(name)}: ¥${sanitizeValue(price)}`;
+                                }).join('<br>')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (receipt.originalText) {
+                    fieldsHTML += `
+                        <div class="flex justify-between items-start text-sm">
+                            <span class="text-gray-600">元のテキスト:</span>
+                            <div class="text-xs text-gray-600 max-w-32 max-h-20 overflow-y-auto">
+                                ${sanitizeValue(receipt.originalText).substring(0, 100)}...
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 確認ボタンを追加
+                fieldsHTML += `
                     <div class="mt-4 pt-3 border-t border-gray-200">
                         <button onclick="handleConfirmation()" class="btn bg-green-600 hover:bg-green-700 text-white btn-sm w-full">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
-                            このレシートを確認完了
+                            確認完了 → 次のレシートへ
                         </button>
                     </div>
                 `;
                 
-                detailsContainer.innerHTML = detailsHTML;
-                console.log('レシート詳細情報を更新しました');
+                finalDetailsContainer.innerHTML = fieldsHTML;
+                console.log('動的に生成されたレシート詳細情報:', fieldsHTML);
                 
                 // 金額変更時の日本円換算を更新
                 const amountInput = document.getElementById('amountInput');
-                const jpyAmountSpan = document.querySelector('.text-blue-600');
+                const jpyAmountSpan = document.getElementById('jpyAmountDisplay');
                 
                 if (amountInput && jpyAmountSpan) {
                     const updateJPYAmount = () => {
@@ -381,82 +531,108 @@
                 console.error('レシート詳細情報のコンテナが見つかりません');
             }
             
-            // 次のレシート情報を更新
-            updateNextReceiptDisplay();
+            
+            // レシート情報をreceiptContentに追加
+            if (content) {
+                const receiptHTML = `
+                    <div class="border border-gray-200 rounded-lg p-3 mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-blue-600">現在処理中</span>
+                        </div>
+                        
+                        
+                        <!-- レシート情報表示 -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">利用日:</span>
+                                <span class="font-medium text-gray-800">${receipt.transaction?.date || receipt.date || '日付不明'}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">店舗名:</span>
+                                <span class="font-medium text-gray-800">${receipt.store?.name || receipt.storeName || '店舗名不明'}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">商品:</span>
+                                <div class="text-xs text-gray-800 max-w-32 text-right">
+                                    ${receipt.items ? receipt.items.map(item => {
+                                        const name = item.name || item.item || item;
+                                        const price = item.price || item.amount || '0';
+                                        return `${name}: ¥${price}`;
+                                    }).join('<br>') : '商品情報なし'}
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">金額合計（元通貨）:</span>
+                                <span class="font-medium text-gray-800">${receipt.transaction?.currency || receipt.currency || 'JPY'} ${receipt.transaction?.amount || receipt.totalAmount || 0}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">金額合計（日本円）:</span>
+                                <span class="font-medium text-blue-600">¥ ${receipt.transaction?.jpyAmount || receipt.jpyAmount || 0}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">カテゴリ:</span>
+                                <span class="font-medium text-gray-800">${receipt.category || 'カテゴリ不明'}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">ロケーション:</span>
+                                <span class="font-medium text-gray-800">${receipt.store?.location || receipt.location || '場所不明'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                content.innerHTML = receiptHTML;
+                console.log('レシート情報をreceiptContentに追加しました');
+            }
+            
+            console.log('レシート表示が完了しました');
         }
         
-        // 次のレシート表示を更新
-        function updateNextReceiptDisplay() {
-            // より具体的なセレクターを使用（左端の開発リストを避ける）
-            const nextReceiptDiv = document.querySelector('.bg-white .border.border-gray-100.rounded-lg.p-2.bg-gray-50');
-            if (nextReceiptDiv) {
-                console.log('次のレシート表示のコンテナを発見:', nextReceiptDiv);
-                // 既存の内容をクリア
-                nextReceiptDiv.innerHTML = '';
-                
-                if (currentIndex + 1 < currentReceipts.length) {
-                    const nextReceipt = currentReceipts[currentIndex + 1];
-                    let nextReceiptContent = '';
-                    
-                    if (nextReceipt.imageUrl) {
-                        // 画像が存在する場合
-                        nextReceiptContent = `
-                            <img src="${nextReceipt.imageUrl}" alt="次のレシート画像" class="w-full h-full object-contain rounded"
-                                 onerror="this.parentElement.innerHTML='<span class=\\"text-xs text-gray-400\\">${nextReceipt.storeName || 'Unknown Store'}</span>'">
-                        `;
-                    } else {
-                        // 画像が存在しない場合、テキスト表示
-                        nextReceiptContent = `
-                            <span class="text-xs text-gray-400">${nextReceipt.storeName || 'Unknown Store'}</span>
-                        `;
-                    }
-                    
-                    const nextReceiptHTML = `
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs text-gray-500">次のレシート</span>
-                            <span class="text-xs text-gray-500">${currentIndex + 2}/${currentReceipts.length}</span>
-                        </div>
-                        <div class="border border-gray-200 rounded h-16 flex items-center justify-center bg-white">
-                            ${nextReceiptContent}
-                        </div>
-                    `;
-                    nextReceiptDiv.innerHTML = nextReceiptHTML;
-                } else {
-                    const completedHTML = `
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs text-gray-500">次のレシート</span>
-                            <span class="text-xs text-gray-500">-</span>
-                        </div>
-                        <div class="border border-gray-200 rounded h-16 flex items-center justify-center bg-white">
-                            <span class="text-xs text-gray-400">すべて確認完了</span>
-                        </div>
-                    `;
-                    nextReceiptDiv.innerHTML = completedHTML;
-                }
-                console.log('次のレシート表示を更新しました');
-            } else {
-                console.error('次のレシート表示のコンテナが見つかりません');
-            }
-        }
         
         // 進捗情報を更新
         function updateProgressInfo() {
-            const processedCount = currentReceipts.length - currentReceipts.length + currentIndex;
-            const remainingCount = currentReceipts.length - currentIndex;
+            const processedCount = currentIndex; // 現在のインデックスが処理済み数
+            const remainingCount = currentReceipts.length - currentIndex - 1; // 残り数（現在のレシートを除く）
             
             // より具体的なセレクターを使用（左端の開発リストを避ける）
             const progressElement = document.querySelector('.bg-white .flex.justify-between.items-center.mb-4');
             if (progressElement) {
                 console.log('進捗情報要素を発見:', progressElement);
+                console.log(`進捗情報更新: 処理済み=${processedCount}件, 残り=${remainingCount}件, 総数=${currentReceipts.length}件`);
                 progressElement.innerHTML = `
                     <span class="text-sm text-gray-600">処理済み: ${processedCount}件</span>
                     <span class="text-sm text-gray-600">残り: ${remainingCount}件</span>
                 `;
+                console.log('進捗情報の更新が完了しました');
             } else {
                 console.error('進捗情報要素が見つかりません');
             }
         }
         
+        // ローディング表示
+        function showLoadingMessage(message = 'レシートを読み込み中...') {
+            const content = document.getElementById('receiptContent');
+            if (!content) {
+                console.error('receiptContent要素が見つかりません');
+                return;
+            }
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="loading loading-spinner loading-lg text-blue-600 mb-4"></div>
+                    <p class="text-gray-600">${message}</p>
+                    <p class="text-xs text-gray-500 mt-2">Firebase接続を確認しています</p>
+                    <button onclick="location.reload()" class="btn btn-outline btn-sm mt-4">
+                        ページをリロード
+                    </button>
+                </div>
+            `;
+        }
+
         // レシートなしメッセージを表示
         function showNoReceiptsMessage() {
             // より具体的なセレクターを使用（左端の開発リストを避ける）
@@ -502,6 +678,7 @@
             if (currentReceipts.length === 0) return;
             
             const currentReceipt = currentReceipts[currentIndex];
+            console.log('確認処理開始:', currentReceipt);
             
             // 編集された値を取得
             const storeNameInput = document.getElementById('storeNameInput');
@@ -549,20 +726,30 @@
             console.log('更新されたデータ:', updatedData);
             
             try {
+                // 現在のレシートデータを取得（修正されたデータを含む）
+                const currentReceiptData = currentReceipts[currentIndex];
+                
+                // 更新されたデータを構築
+                const finalUpdatedData = {
+                    storeName: currentReceiptData.store?.name || currentReceiptData.storeName || updatedData.storeName,
+                    date: currentReceiptData.transaction?.date || currentReceiptData.date || updatedData.date,
+                    currency: currentReceiptData.transaction?.currency || currentReceiptData.currency || updatedData.currency,
+                    totalAmount: currentReceiptData.transaction?.amount || currentReceiptData.totalAmount || updatedData.totalAmount,
+                    location: currentReceiptData.store?.location || currentReceiptData.location || updatedData.location,
+                    category: currentReceiptData.category || updatedData.category,
+                    jpyAmount: currentReceiptData.jpyAmount || updatedData.jpyAmount
+                };
+                
+                console.log('最終的な更新データ:', finalUpdatedData);
+                
                 // レシートを確認済みにマーク（更新されたデータも含めて）
-                await firebaseFunctions.markReceiptAsConfirmed(currentReceipt.id, updatedData);
+                await firebaseFunctions.markReceiptAsConfirmed(currentReceipt.id, finalUpdatedData);
                 
-                // 次のレシートに移動
-                currentIndex++;
+                // 成功メッセージを表示
+                alert('データベースに登録が完了しました！');
                 
-                if (currentIndex >= currentReceipts.length) {
-                    // すべて確認完了
-                    showNoReceiptsMessage();
-                } else {
-                    // 次のレシートを表示
-                    updateReceiptDisplay();
-                    updateProgressInfo();
-                }
+                // レシート登録画面（step1）に遷移
+                window.location.href = 'registration_step1.html';
                 
                 console.log('レシート確認完了:', currentReceipt.id);
             } catch (error) {
@@ -571,20 +758,487 @@
             }
         };
         
-        // ページ読み込み時にレシートを読み込み
-        document.addEventListener('DOMContentLoaded', function() {
-            // Firebase関数の読み込みを待ってからレシートを読み込み
-            const checkFirebaseFunctions = () => {
-                if (firebaseFunctions && firebaseFunctions.getUnprocessedReceipts) {
-                    console.log('Firebase関数が準備完了、レシートを読み込みます');
-                    loadUnprocessedReceipts();
-                } else {
-                    console.log('Firebase関数の読み込み待機中...');
-                    setTimeout(checkFirebaseFunctions, 500);
+        // 編集機能の変数
+        let currentEditField = null;
+        let currentEditType = null;
+        let currentEditValue = null;
+        
+        // 編集モーダルを開く
+        window.openEditModal = function() {
+            console.log('修正モーダルを開こうとしています...');
+            
+            if (currentReceipts.length === 0) {
+                console.log('レシートがありません');
+                alert('レシートがありません');
+                return;
+            }
+            
+            const receipt = currentReceipts[currentIndex];
+            console.log('現在のレシート:', receipt);
+            
+            // モーダル要素を確実に取得
+            let modal = document.getElementById('editModal');
+            if (!modal) {
+                console.error('修正モーダルが見つかりません。DOMを再確認します...');
+                // DOMが完全に読み込まれていない可能性があるので、少し待ってから再試行
+                setTimeout(() => {
+                    modal = document.getElementById('editModal');
+                    if (!modal) {
+                        console.error('修正モーダルが見つかりません');
+                        alert('修正モーダルが見つかりません。ページをリロードしてください。');
+                        return;
+                    }
+                    openEditModalInternal(modal, receipt);
+                }, 100);
+                return;
+            }
+            
+            openEditModalInternal(modal, receipt);
+        };
+        
+        // 内部関数：モーダルを開く
+        function openEditModalInternal(modal, receipt) {
+            console.log('モーダル要素を確認:', modal);
+            
+            // モーダルの内容をリセット
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 w-full max-w-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800" id="editModalTitle">項目を編集</h3>
+                        <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" id="editModalLabel">値</label>
+                        <div id="editModalInput"></div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button onclick="closeEditModal()" class="btn btn-outline btn-sm">キャンセル</button>
+                        <button onclick="saveEdit()" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-sm">保存</button>
+                    </div>
+                </div>
+            `;
+            
+            // モーダルを表示
+            modal.style.display = 'flex';
+            
+            // 少し待ってから要素を取得
+            setTimeout(() => {
+                // モーダル内から直接要素を検索
+                const title = modal.querySelector('#editModalTitle');
+                const label = modal.querySelector('#editModalLabel');
+                const input = modal.querySelector('#editModalInput');
+                
+                console.log('タイトル要素:', title);
+                console.log('ラベル要素:', label);
+                console.log('入力要素:', input);
+                
+                if (!title || !label || !input) {
+                    console.error('モーダル要素が見つかりません');
+                    console.log('モーダルのHTML:', modal.innerHTML);
+                    alert('モーダル要素が見つかりません');
+                    modal.style.display = 'none';
+                    return;
+                }
+                
+                openEditModalFinal(title, label, input, receipt);
+            }, 100);
+        }
+        
+        // 最終的なモーダル表示処理
+        function openEditModalFinal(title, label, input, receipt) {
+            console.log('最終的なモーダル表示処理を開始');
+            
+            title.textContent = 'レシート情報を修正';
+            label.textContent = '修正したい項目を選択してください';
+            
+            // 修正可能な項目のリストを表示
+            const inputHTML = `
+                <div class="space-y-3">
+                    <button onclick="editField('storeNameInput', 'text', '${receipt.store?.name || receipt.storeName || ''}')" class="btn btn-outline w-full justify-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        店舗名を修正
+                    </button>
+                    
+                    <button onclick="editField('dateInput', 'date', '${receipt.transaction?.date || receipt.date || ''}')" class="btn btn-outline w-full justify-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        日付を修正
+                    </button>
+                    
+                    <button onclick="editField('amountInput', 'currency', '${receipt.transaction?.currency || receipt.currency || ''}')" class="btn btn-outline w-full justify-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                        金額を修正
+                    </button>
+                    
+                    <button onclick="editField('locationInput', 'text', '${receipt.store?.location || receipt.location || ''}')" class="btn btn-outline w-full justify-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        場所を修正
+                    </button>
+                    
+                    <button onclick="editField('categorySelect', 'select', '${receipt.category || ''}')" class="btn btn-outline w-full justify-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        カテゴリを修正
+                    </button>
+                </div>
+            `;
+            
+            input.innerHTML = inputHTML;
+            document.body.style.overflow = 'hidden';
+            
+            console.log('修正モーダルを表示しました');
+        }
+        
+        
+        // 編集モーダルの開閉機能
+        window.editField = function(fieldId, fieldType, currentValue) {
+            console.log('editField関数が呼ばれました:', fieldId, fieldType, currentValue);
+            
+            currentEditField = fieldId;
+            currentEditType = fieldType;
+            currentEditValue = currentValue;
+            
+            const modal = document.getElementById('editModal');
+            if (!modal) {
+                console.error('モーダルが見つかりません');
+                alert('モーダルが見つかりません');
+                return;
+            }
+            
+            // モーダル内から直接要素を検索
+            const title = modal.querySelector('#editModalTitle');
+            const label = modal.querySelector('#editModalLabel');
+            const input = modal.querySelector('#editModalInput');
+            
+            if (!title || !label || !input) {
+                console.error('モーダル要素が見つかりません');
+                console.log('モーダルのHTML:', modal.innerHTML);
+                alert('モーダル要素が見つかりません');
+                return;
+            }
+            
+            // フィールド名を取得
+            const fieldNames = {
+                'storeNameInput': '店舗名',
+                'dateInput': '日付',
+                'amountInput': '金額',
+                'locationInput': '場所',
+                'categorySelect': 'カテゴリ'
+            };
+            
+            title.textContent = `${fieldNames[fieldId] || '項目'}を編集`;
+            label.textContent = fieldNames[fieldId] || '値';
+            
+            // 入力フィールドを生成
+            // ヘルパー関数を定義
+            const formatDate = (dateString) => {
+                try {
+                    if (!dateString) return '';
+                    
+                    // 既にYYYY-MM-DD形式の場合はそのまま返す
+                    if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                        return dateString;
+                    }
+                    
+                    const date = new Date(dateString);
+                    if (isNaN(date.getTime())) {
+                        console.warn('無効な日付形式:', dateString);
+                        return '';
+                    }
+                    return date.toISOString().split('T')[0];
+                } catch (error) {
+                    console.error('日付フォーマットエラー:', error, '入力値:', dateString);
+                    return '';
                 }
             };
             
-            setTimeout(checkFirebaseFunctions, 1000);
+            const getNestedValue = (obj, path) => {
+                return path.split('.').reduce((current, key) => current?.[key], obj);
+            };
+            
+            let inputHTML = '';
+            switch (fieldType) {
+                case 'text':
+                    inputHTML = `<input type="text" id="editInput" value="${currentValue}" class="input input-bordered w-full">`;
+                    break;
+                case 'date':
+                    inputHTML = `<input type="date" id="editInput" value="${formatDate(currentValue)}" class="input input-bordered w-full">`;
+                    break;
+                case 'currency':
+                    const amount = getNestedValue(currentReceipts[currentIndex], 'transaction.amount') || currentReceipts[currentIndex]?.totalAmount || 0;
+                    const currentJpyAmount = currentReceipts[currentIndex]?.jpyAmount || 0;
+                    inputHTML = `
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">通貨</label>
+                                <input type="text" id="editCurrency" value="${currentValue}" class="input input-bordered w-full" placeholder="JPY" onchange="updateJPYConversion()">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">金額</label>
+                                <input type="number" id="editAmount" value="${amount}" class="input input-bordered w-full" step="0.01" onchange="updateJPYConversion()">
+                            </div>
+                            <div class="bg-blue-50 p-2 rounded">
+                                <label class="block text-xs text-gray-600 mb-1">日本円換算</label>
+                                <div id="jpyConversionDisplay" class="text-sm font-medium text-blue-800">¥ ${currentJpyAmount}</div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'select':
+                    const options = [
+                        { value: 'food', label: '食費' },
+                        { value: 'transport', label: '交通費' },
+                        { value: 'shopping', label: 'お買い物' },
+                        { value: 'entertainment', label: '娯楽' },
+                        { value: 'other', label: 'その他' }
+                    ];
+                    const optionHTML = options.map(opt => 
+                        `<option value="${opt.value}" ${currentValue === opt.value ? 'selected' : ''}>${opt.label}</option>`
+                    ).join('');
+                    inputHTML = `<select id="editInput" class="select select-bordered w-full">${optionHTML}</select>`;
+                    break;
+                default:
+                    inputHTML = `<input type="text" id="editInput" value="${currentValue}" class="input input-bordered w-full">`;
+            }
+            
+            input.innerHTML = inputHTML;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+        
+        window.closeEditModal = function() {
+            const modal = document.getElementById('editModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            currentEditField = null;
+            currentEditType = null;
+            currentEditValue = null;
+        };
+        
+        window.saveEdit = function() {
+            console.log('saveEdit関数が呼ばれました');
+            
+            if (!currentEditField) {
+                console.log('編集フィールドが設定されていません');
+                alert('編集フィールドが設定されていません');
+                return;
+            }
+            
+            let newValue = '';
+            if (currentEditType === 'currency') {
+                const currency = document.getElementById('editCurrency');
+                const amount = document.getElementById('editAmount');
+                
+                if (currency && amount) {
+                    newValue = `${currency.value} ${amount.value}`;
+                } else {
+                    console.log('通貨または金額の入力要素が見つかりません');
+                    alert('通貨または金額の入力要素が見つかりません');
+                    return;
+                }
+            } else {
+                const input = document.getElementById('editInput');
+                
+                if (input) {
+                    newValue = input.value;
+                } else {
+                    console.log('入力要素が見つかりません');
+                    alert('入力要素が見つかりません');
+                    return;
+                }
+            }
+            
+            console.log('保存する値:', newValue);
+            
+            // レシートデータを更新
+            if (currentReceipts[currentIndex]) {
+                const receipt = currentReceipts[currentIndex];
+                if (currentEditField === 'storeNameInput') {
+                    receipt.store = receipt.store || {};
+                    receipt.store.name = newValue;
+                } else if (currentEditField === 'dateInput') {
+                    receipt.transaction = receipt.transaction || {};
+                    // 日付の検証とフォーマット
+                    try {
+                        const date = new Date(newValue);
+                        if (isNaN(date.getTime())) {
+                            throw new Error('無効な日付です');
+                        }
+                        receipt.transaction.date = newValue;
+                        receipt.date = newValue; // 互換性のため
+                    } catch (error) {
+                        console.error('日付保存エラー:', error);
+                        alert('日付の形式が正しくありません: ' + newValue);
+                        return;
+                    }
+                } else if (currentEditField === 'amountInput') {
+                    // 金額の修正処理
+                    const currency = document.getElementById('editCurrency').value;
+                    const amount = parseFloat(document.getElementById('editAmount').value) || 0;
+                    
+                    receipt.transaction = receipt.transaction || {};
+                    receipt.transaction.currency = currency;
+                    receipt.transaction.amount = amount;
+                    receipt.totalAmount = amount;
+                    receipt.currency = currency;
+                    
+                    // 日本円換算を計算
+                    const exchangeRates = {
+                        'JPY': 1,
+                        'USD': 150,
+                        'EUR': 160,
+                        'GBP': 190,
+                        'AUD': 100,
+                        'CAD': 110,
+                        'CHF': 170,
+                        'CNY': 20,
+                        'KRW': 0.11,
+                        'SGD': 110,
+                        'THB': 4.2,
+                        'MYR': 32,
+                        'IDR': 0.01,
+                        'PHP': 2.7,
+                        'VND': 0.006,
+                        'INR': 1.8
+                    };
+                    
+                    const jpyAmount = Math.round(amount * (exchangeRates[currency] || 1));
+                    receipt.jpyAmount = jpyAmount;
+                    
+                    console.log('金額を更新:', { currency, amount, jpyAmount });
+                } else if (currentEditField === 'locationInput') {
+                    receipt.store = receipt.store || {};
+                    receipt.store.location = newValue;
+                } else if (currentEditField === 'categorySelect') {
+                    receipt.category = newValue;
+                }
+                
+                console.log('レシートデータを更新しました:', receipt);
+                
+                // 表示を更新
+                updateReceiptDisplay();
+                
+                // 成功メッセージ
+                alert('修正が完了しました！');
+            }
+            
+            closeEditModal();
+        };
+        
+        // リアルタイム日本円換算更新
+        window.updateJPYConversion = function() {
+            const currency = document.getElementById('editCurrency');
+            const amount = document.getElementById('editAmount');
+            const jpyDisplay = document.getElementById('jpyConversionDisplay');
+            
+            if (!currency || !amount || !jpyDisplay) return;
+            
+            const exchangeRates = {
+                'JPY': 1,
+                'USD': 150,
+                'EUR': 160,
+                'GBP': 190,
+                'AUD': 100,
+                'CAD': 110,
+                'CHF': 170,
+                'CNY': 20,
+                'KRW': 0.11,
+                'SGD': 110,
+                'THB': 4.2,
+                'MYR': 32,
+                'IDR': 0.01,
+                'PHP': 2.7,
+                'VND': 0.006,
+                'INR': 1.8
+            };
+            
+            const currencyValue = currency.value.toUpperCase();
+            const amountValue = parseFloat(amount.value) || 0;
+            const jpyAmount = Math.round(amountValue * (exchangeRates[currencyValue] || 1));
+            
+            jpyDisplay.textContent = `¥ ${jpyAmount.toLocaleString()}`;
+        };
+        
+        // ESCキーでモーダルを閉じる
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeEditModal();
+            }
+        });
+        
+        // ログイン画面に遷移
+        window.goToLogin = function() {
+            window.location.href = 'login.html';
+        };
+        
+        // ユーザー情報を表示
+        function updateUserInfo() {
+            const userInfoDiv = document.getElementById('userInfo');
+            if (!userInfoDiv) return;
+            
+            // localStorageから認証状態を確認
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userEmail = localStorage.getItem('userEmail');
+            
+            if (isLoggedIn && userEmail) {
+                userInfoDiv.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>${userEmail}</span>
+                `;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <button onclick="goToLogin()" class="flex items-center hover:text-blue-200 transition-colors cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span>未ログイン</span>
+                    </button>
+                `;
+            }
+        }
+
+        // ページ読み込み時にレシートを読み込み
+        document.addEventListener('DOMContentLoaded', function() {
+            // ローディング表示を即座に表示
+            showLoadingMessage();
+            
+            // Firebase関数の読み込みを待ってからレシートを読み込み
+            let checkCount = 0;
+            const maxChecks = 50; // 最大50回までチェック
+            
+            const checkFirebaseFunctions = () => {
+                checkCount++;
+                console.log(`Firebase関数チェック ${checkCount}/${maxChecks}`);
+                
+                if (firebaseFunctions && firebaseFunctions.getUnprocessedReceipts) {
+                    console.log('Firebase関数が準備完了、レシートを読み込みます');
+                    loadUnprocessedReceipts();
+                } else if (checkCount >= maxChecks) {
+                    console.error('Firebase関数の読み込みがタイムアウトしました');
+                    showErrorMessage('Firebase関数の読み込みに失敗しました。ページをリロードしてください。');
+                } else {
+                    console.log('Firebase関数の読み込み待機中...');
+                    setTimeout(checkFirebaseFunctions, 200); // 200msに変更
+                }
+            };
+            
+            // 即座にチェック開始（遅延を削除）
+            checkFirebaseFunctions();
         });
     </script>
 </body>
