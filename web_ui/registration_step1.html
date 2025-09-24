@@ -24,43 +24,34 @@
     </script>
 </head>
 <body class="bg-base-100 min-h-screen">
-    <div class="min-h-screen bg-gray-100 flex">
-        <div class="flex-1 flex justify-center">
-            <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
-            <!-- ステータスバー -->
-            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm relative">
-                <span class="font-medium">海外レシート管理マスター</span>
-                <div id="userInfo" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs">
-                    <span class="loading loading-spinner loading-xs"></span>
-                    <span class="ml-1">読み込み中...</span>
-                </div>
-            </div>
+    <div class="min-h-screen bg-gray-100">
+        <div class="w-full bg-white min-h-screen">
+            <!-- ナビゲーションヘッダー（動的に生成される） -->
             
-            <div class="px-4 py-6">
+            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-16 pb-16 flex flex-col min-h-screen">
             <!-- ヘッダー -->
             <div class="text-center mb-6">
+                <h1 class="text-lg sm:text-xl font-bold text-gray-800">レシート登録</h1>
+                <p class="text-xs sm:text-sm text-gray-600 mt-2">フォルダからのレシートを選択して追加</p>
             </div>
             
             <!-- レシートアップロード -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
-                <div class="p-4">
+                <div class="p-3 sm:p-4">
                     <!-- レシートプレビューエリア -->
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg h-40 mb-4 flex items-center justify-center bg-gray-50">
+                    <div id="previewContainer" class="border-2 border-dashed border-gray-300 rounded-lg h-96 sm:h-80 mb-6 sm:mb-8 flex items-center justify-center bg-gray-50">
                         <div id="previewPlaceholder" class="text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 sm:h-20 sm:w-20 mx-auto text-gray-400 mb-2 sm:mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span class="text-gray-500 text-sm">レシート画像を選択してください</span>
+                            <span class="text-gray-500 text-sm sm:text-base">レシート画像のプレビュー</span>
                         </div>
                         <img id="previewImage" class="hidden w-full h-full object-contain rounded-lg" alt="選択された画像">
                     </div>
 
                     <!-- ファイル選択 -->
                     <div class="text-center">
-                        <button class="btn btn-outline btn-sm" onclick="document.getElementById('fileInput').click()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
+                        <button class="text-blue-600 hover:text-blue-800 underline text-xs sm:text-sm cursor-pointer whitespace-nowrap" onclick="document.getElementById('fileInput').click()">
                             画像を選択
                         </button>
                     </div>
@@ -70,22 +61,26 @@
                 </div>
             </div>
 
-            <!-- 登録ボタン -->
-            <div class="pb-4">
-                <button id="registerBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block" onclick="handleRegistration()">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    登録
-                </button>
+            <!-- ボタンエリア（最下部に固定） -->
+            <div class="mt-auto pt-6">
+                <!-- 登録ボタン -->
+                <div class="pb-3 sm:pb-4">
+                    <button id="registerBtn" class="btn bg-amber-600 hover:bg-amber-700 text-white btn-block text-sm sm:text-base" onclick="handleRegistration()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="whitespace-nowrap">登録</span>
+                    </button>
+                </div>
+                
+                <!-- サマリー情報を見るボタン -->
+                <div class="text-center">
+                    <a href="registration_step3.html" class="btn btn-outline btn-sm text-xs sm:text-sm">
+                        <span class="whitespace-nowrap">サマリー情報を見る</span>
+                    </a>
+                </div>
             </div>
             
-            <!-- サマリ表示リンク -->
-            <div class="text-center mb-4">
-                <a href="registration_step3.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
-                    登録済みレシートのサマリーへ
-                </a>
-            </div>
             
             </div>
             </div>
@@ -94,6 +89,8 @@
 
     <!-- Firebase SDK -->
     <script type="module" src="firebase-config.js"></script>
+    <!-- Navigation -->
+    <script src="navigation.js"></script>
     
     <script type="module">
         // Firebase関数を動的にインポート
@@ -145,16 +142,23 @@
                 console.log('FileReader onload triggered');
                 const previewImage = document.getElementById('previewImage');
                 const previewPlaceholder = document.getElementById('previewPlaceholder');
+                const previewContainer = document.getElementById('previewContainer');
                 
                 console.log('Elements found:', {
                     previewImage: previewImage,
-                    previewPlaceholder: previewPlaceholder
+                    previewPlaceholder: previewPlaceholder,
+                    previewContainer: previewContainer
                 });
                 
-                if (previewImage && previewPlaceholder) {
+                if (previewImage && previewPlaceholder && previewContainer) {
                     previewImage.src = e.target.result;
                     previewImage.classList.remove('hidden');
                     previewPlaceholder.classList.add('hidden');
+                    
+                    // 画像が表示されたときに点線の枠を非表示にして、画像の外枠と一致させる
+                    previewContainer.classList.remove('border-2', 'border-dashed', 'border-gray-300', 'bg-gray-50');
+                    previewContainer.classList.add('border-0', 'bg-transparent');
+                    
                     console.log('Preview updated successfully');
                 } else {
                     console.error('Preview elements not found!');
@@ -328,10 +332,18 @@
             try {
                 showStatus('画像をアップロード中...', 'info');
                 
-                // 1. Firebase Storageに画像をアップロード
+                // 1. Firebase Storageに画像をアップロード（エラーハンドリング付き）
                 const receiptId = `receipt_${Date.now()}`;
-                const imageUrl = await firebaseFunctions.uploadReceiptImage(selectedFile, receiptId);
-                console.log('画像アップロード完了:', imageUrl);
+                let imageUrl = null;
+                
+                try {
+                    imageUrl = await firebaseFunctions.uploadReceiptImage(selectedFile, receiptId);
+                    console.log('画像アップロード完了:', imageUrl);
+                } catch (uploadError) {
+                    console.warn('画像アップロードに失敗しました:', uploadError);
+                    console.log('画像アップロードなしで処理を続行します');
+                    imageUrl = 'upload_failed'; // プレースホルダー
+                }
                 
                 showStatus('画像を解析中...', 'info');
                 
@@ -351,12 +363,14 @@
                 
                 console.log('生成されたJSON:', receiptData);
                 
-                // 5. Firebase Databaseに保存
-                await firebaseFunctions.saveReceiptFromJSON(receiptData);
+                // 5. 分析結果をlocalStorageに保存（確認ページで表示するため）
+                console.log('localStorageに保存するデータ:', receiptData);
+                localStorage.setItem('currentReceiptAnalysis', JSON.stringify(receiptData));
+                console.log('localStorageに保存完了');
                 
-                showStatus('登録完了！次の画面に移動します...', 'success');
+                showStatus('分析完了！確認画面に移動します...', 'success');
                 
-                // 6. 3秒後に次の画面に遷移
+                // 7. 3秒後に次の画面に遷移
                 setTimeout(() => {
                     window.location.href = 'registration_step2.html';
                 }, 3000);

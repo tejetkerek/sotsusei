@@ -9,6 +9,8 @@
     
     <!-- Firebase SDK -->
     <script type="module" src="firebase-config.js"></script>
+    <!-- Navigation -->
+    <script src="navigation.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -23,19 +25,11 @@
     </script>
 </head>
 <body class="bg-base-100 min-h-screen">
-    <div class="min-h-screen bg-gray-100 flex">
-        <div class="flex-1 flex justify-center">
-            <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
-            <!-- ステータスバー -->
-            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm relative">
-                <span class="font-medium">海外レシート管理マスター</span>
-                <div id="userInfo" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs">
-                    <span class="loading loading-spinner loading-xs"></span>
-                    <span class="ml-1">読み込み中...</span>
-                </div>
-            </div>
+    <div class="min-h-screen bg-gray-100">
+        <div class="w-full bg-white min-h-screen">
+            <!-- ナビゲーションヘッダー（動的に生成される） -->
             
-            <div class="px-4 py-6">
+            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-16 pb-16">
                             <!-- ヘッダー -->
                             <div class="text-center mb-6">
                                 <h1 class="text-xl font-bold text-gray-800">ログイン</h1>
@@ -70,7 +64,7 @@
 
                             <!-- ログインボタン -->
                             <div class="mb-4">
-                                <button id="loginBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white btn-block border-0">
+                                <button id="loginBtn" class="btn bg-amber-600 hover:bg-amber-700 text-white btn-block border-0">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                     </svg>
@@ -78,15 +72,6 @@
                                 </button>
                             </div>
 
-                            <!-- テストアカウント作成ボタン -->
-                            <div class="mb-4">
-                                <button id="createTestBtn" class="btn btn-outline btn-sm btn-block">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    テストアカウントを作成
-                                </button>
-                            </div>
 
                             <!-- エラーメッセージ表示エリア -->
                             <div id="errorMessage" class="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm hidden">
@@ -112,7 +97,7 @@
 
     <script type="module">
         // Firebase関数を動的インポート
-        let loginUser, initializeDummyData, createTestAccount;
+        let loginUser;
         
         // Firebase関数を読み込み
         let firebaseFunctions;
@@ -120,8 +105,6 @@
             try {
                 const firebaseModule = await import('./firebase-config.js');
                 loginUser = firebaseModule.loginUser;
-                initializeDummyData = firebaseModule.initializeDummyData;
-                createTestAccount = firebaseModule.createTestAccount;
                 firebaseFunctions = firebaseModule;
                 console.log('Firebase関数の読み込みが完了しました');
                 
@@ -163,36 +146,6 @@
             // Firebase関数を読み込み
             await loadFirebaseFunctions();
             
-            // テストアカウント作成ボタン
-            document.getElementById('createTestBtn').addEventListener('click', async function() {
-                const createTestBtn = document.getElementById('createTestBtn');
-                createTestBtn.disabled = true;
-                createTestBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> 作成中...';
-                
-                try {
-                    if (!createTestAccount) {
-                        throw new Error('createTestAccount関数が読み込まれていません');
-                    }
-                    await createTestAccount();
-                    showSuccess('テストアカウントが作成されました！');
-                    
-                    // フォームに自動入力
-                    document.getElementById('emailInput').value = 'admin@test.com';
-                    document.getElementById('passwordInput').value = 'testtest';
-                    
-                } catch (error) {
-                    console.error('テストアカウント作成エラー:', error);
-                    showError('テストアカウントの作成に失敗しました: ' + error.message);
-                } finally {
-                    createTestBtn.disabled = false;
-                    createTestBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        テストアカウントを作成
-                    `;
-                }
-            });
 
             // ログインボタン
             document.getElementById('loginBtn').addEventListener('click', function() {

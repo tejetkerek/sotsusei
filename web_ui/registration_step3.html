@@ -21,23 +21,19 @@
     
     <!-- Firebase SDK -->
     <script type="module" src="firebase-config.js"></script>
+    <!-- Navigation -->
+    <script src="navigation.js"></script>
 </head>
 <body class="bg-base-100 min-h-screen">
-    <div class="min-h-screen bg-gray-100 flex">
-        <div class="flex-1 flex justify-center">
-            <div class="w-full max-w-sm bg-white min-h-screen shadow-lg">
-            <!-- ステータスバー -->
-            <div class="bg-blue-600 text-white px-4 py-2 text-center text-sm relative">
-                <span class="font-medium">海外レシート管理マスター</span>
-                <div id="userInfo" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-xs">
-                    <span class="loading loading-spinner loading-xs"></span>
-                    <span class="ml-1">読み込み中...</span>
-                </div>
-            </div>
+    <div class="min-h-screen bg-gray-100">
+        <div class="w-full bg-white min-h-screen">
+            <!-- ナビゲーションヘッダー（動的に生成される） -->
             
-            <div class="px-4 py-6">
+            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-16 pb-16">
             <!-- ヘッダー -->
-            <div class="text-center mb-6">
+            <div class="text-center mb-8">
+                <h1 class="text-xl font-bold text-gray-800">サマリー情報</h1>
+                <p class="text-sm text-gray-600 mt-3">登録済みのレシートの概要を確認できます</p>
             </div>
 
 
@@ -55,7 +51,7 @@
                                     <span class="text-gray-500 self-center text-sm">〜</span>
                                     <input type="date" id="endDate" class="input input-bordered input-sm flex-1">
                                 </div>
-                                <button onclick="setCustomPeriod()" class="btn btn-sm btn-primary w-full">
+                                <button onclick="setCustomPeriod()" class="btn btn-sm bg-amber-600 hover:bg-amber-700 text-white w-full">
                                     適用
                                 </button>
                             </div>
@@ -87,17 +83,10 @@
                        
                         
                         <!-- アクションリンク -->
-                        <div class="space-y-3">
-                            <div class="text-center">
-                                <a href="registration_step1.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
-                                    新たなレシートを追加する
-                                </a>
-                            </div>
-                            <div class="text-center">
-                                <a href="all_receipts.html" class="text-blue-600 hover:text-blue-800 underline text-sm">
-                                    登録済みレシートのサマリーへ
-                                </a>
-                            </div>
+                        <div class="text-center">
+                            <a href="registration_step1.html" class="btn btn-outline btn-sm">
+                                新たなレシートを追加する
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -552,7 +541,7 @@
             // グラフHTMLを生成
             graphContainer.innerHTML = `
                 <div class="space-y-4">
-                    <h4 class="font-medium text-gray-800 text-center">支出分析 (${periodText})</h4>
+                    <h4 class="font-medium text-gray-800 text-center">支出分析</h4>
                     
                     <!-- 統計サマリー -->
                     <div class="grid grid-cols-2 gap-4">
@@ -638,8 +627,10 @@
             // データポイントの座標を計算
             const points = dates.map((date, index) => {
                 const amount = Math.round(dailyTotals[date]);
-                const x = (index / (dates.length - 1)) * 100; // 0-100%の範囲
-                const y = 100 - (amount / maxAmount) * 100; // 上から下へ（Y軸反転）
+                // 左右に10%の余白を追加
+                const x = 10 + (index / (dates.length - 1)) * 80; // 10-90%の範囲
+                // 上下に余白を追加（0円の位置を85%に設定）
+                const y = 10 + (100 - (amount / maxAmount) * 75); // 10-85%の範囲（Y軸反転）
                 return { x, y, amount, date };
             });
             
@@ -671,8 +662,8 @@
                         <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style="shape-rendering: geometricPrecision;">
                             <!-- グリッド線 -->
                             ${yAxisLabels.map((_, index) => {
-                                const y = (index / (yAxisLabels.length - 1)) * 100;
-                                return `<line x1="0" y1="${y}" x2="100" y2="${y}" stroke="#e5e7eb" stroke-width="0.2"/>`;
+                                const y = 10 + (index / (yAxisLabels.length - 1)) * 75;
+                                return `<line x1="10" y1="${y}" x2="90" y2="${y}" stroke="#e5e7eb" stroke-width="0.2"/>`;
                             }).join('')}
                             
                             <!-- 折れ線 -->
@@ -700,12 +691,14 @@
                         
                         <!-- X軸ラベル -->
                         <div class="absolute -bottom-6 left-0 right-0 flex justify-between px-2">
-                            ${dates.map(date => {
+                            ${dates.map((date, index) => {
                                 const dateObj = new Date(date);
                                 const month = dateObj.getMonth() + 1;
                                 const day = dateObj.getDate();
                                 const dateLabel = `${month}/${day}`;
-                                return `<div class="text-xs text-gray-500 transform -rotate-45 origin-left whitespace-nowrap">${dateLabel}</div>`;
+                                // データポイントの位置に合わせてラベルを配置
+                                const labelPosition = 10 + (index / (dates.length - 1)) * 80;
+                                return `<div class="text-xs text-gray-500 transform -rotate-45 origin-left whitespace-nowrap absolute" style="left: ${labelPosition}%;">${dateLabel}</div>`;
                             }).join('')}
                         </div>
                     </div>
