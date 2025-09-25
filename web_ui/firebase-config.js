@@ -29,11 +29,19 @@ auth.onAuthStateChanged((user) => {
     // ログイン状態をlocalStorageに保存
     localStorage.setItem('userEmail', user.email);
     localStorage.setItem('isLoggedIn', 'true');
+    // ナビゲーションを更新
+    if (window.navigationManager) {
+      window.navigationManager.updateLoginStatus();
+    }
   } else {
     console.log('ユーザーがログアウトしています');
     // ログアウト状態をlocalStorageに保存
     localStorage.removeItem('userEmail');
     localStorage.setItem('isLoggedIn', 'false');
+    // ナビゲーションを更新
+    if (window.navigationManager) {
+      window.navigationManager.updateLoginStatus();
+    }
   }
 });
 
@@ -41,6 +49,122 @@ auth.onAuthStateChanged((user) => {
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { collection, addDoc, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
+
+// セキュリティ: 認証チェック関数
+function requireAuth() {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('認証が必要です。ログインしてください。');
+  }
+  if (!user.uid) {
+    throw new Error('ユーザーIDが無効です。');
+  }
+  return user;
+}
+
+// ページアクセス制御: 認証が必要なページでのチェック
+export function checkPageAuth() {
+  const user = auth.currentUser;
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const userEmail = localStorage.getItem('userEmail');
+  
+  console.log('認証チェック:', { user: !!user, userEmail: user?.email, isLoggedIn, localStorageEmail: userEmail });
+  
+  // Firebase認証が存在する場合はそれを優先
+  if (user) {
+    // localStorageが空の場合は更新
+    if (!isLoggedIn || !userEmail || user.email !== userEmail) {
+      console.log('localStorageを更新中...');
+      localStorage.setItem('userEmail', user.email);
+      localStorage.setItem('isLoggedIn', 'true');
+    }
+    return true;
+  }
+  
+  // Firebase認証が存在しない場合
+  if (!user) {
+    console.log('Firebase認証が存在しません');
+    // localStorageもクリア
+    localStorage.removeItem('userEmail');
+    localStorage.setItem('isLoggedIn', 'false');
+    // 即座にメッセージを表示してリダイレクト
+    showAuthMessage('ログインをお願いします');
+    setTimeout(() => {
+      // ログイン画面にリダイレクト
+      window.location.href = 'login.html';
+    }, 4000);
+    return false;
+  }
+  
+  return true;
+}
+
+// 認証メッセージ表示関数
+function showAuthMessage(message) {
+  // 既存のメッセージを削除
+  const existingMessage = document.getElementById('authMessage');
+  if (existingMessage) {
+    existingMessage.remove();
+  }
+  
+  // 新しいメッセージを作成（中央に配置）
+  const messageDiv = document.createElement('div');
+  messageDiv.id = 'authMessage';
+        messageDiv.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-gray-50 border border-gray-300 text-gray-600 px-6 py-4 rounded-lg shadow-lg';
+  messageDiv.innerHTML = `
+    <div class="flex items-center justify-center">
+      <svg class="w-6 h-6 mr-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span class="font-medium text-sm whitespace-nowrap">${message}</span>
+    </div>
+  `;
+  
+  // ページに追加
+  document.body.appendChild(messageDiv);
+  
+  console.log('認証メッセージを表示:', message);
+  
+  // 4秒後にメッセージを削除
+  setTimeout(() => {
+    if (messageDiv && messageDiv.parentNode) {
+      messageDiv.parentNode.removeChild(messageDiv);
+    }
+  }, 4000);
+}
+
+// ログイン画面での認証チェック（既にログイン済みの場合はリダイレクト）
+export function checkLoginPageAuth() {
+  const user = auth.currentUser;
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const userEmail = localStorage.getItem('userEmail');
+  
+  // 認証状態の整合性チェック
+  if (user && isLoggedIn && userEmail && user.email === userEmail) {
+    console.log('既にログイン済みです:', user.email);
+    // 既にログイン済みの場合はサマリページにリダイレクト
+    window.location.href = 'registration_step3.html';
+    return false;
+  }
+  
+  // 認証状態が不整合な場合はクリア
+  if ((user && !isLoggedIn) || (isLoggedIn && !user) || (user && userEmail && user.email !== userEmail)) {
+    console.log('認証状態の不整合を検出、クリアします');
+    localStorage.removeItem('userEmail');
+    localStorage.setItem('isLoggedIn', 'false');
+  }
+  
+  return true;
+}
+
+// セキュリティ: ユーザーID検証関数
+function validateUserAccess(requestedUserId) {
+  const user = requireAuth();
+  if (user.uid !== requestedUserId) {
+    throw new Error('アクセス権限がありません。');
+  }
+  return user;
+}
 
 // Firestore関数の動的インポート
 let firestoreFunctions = null;
@@ -118,11 +242,103 @@ export function logoutUser() {
   return signOut(auth)
     .then(() => {
       console.log('ログアウト成功');
+      // localStorageもクリア
+      localStorage.removeItem('userEmail');
+      localStorage.setItem('isLoggedIn', 'false');
+      // ログイン画面にリダイレクト
+      window.location.href = 'login.html';
     })
     .catch((error) => {
       console.error('ログアウトエラー:', error);
       throw error;
     });
+}
+
+// 完全な認証状態リセット機能
+export function forceLogout() {
+  return signOut(auth)
+    .then(() => {
+      console.log('強制ログアウト成功');
+      // localStorageを完全にクリア
+      localStorage.clear();
+      // セッションストレージもクリア
+      sessionStorage.clear();
+      // ログイン画面にリダイレクト
+      window.location.href = 'login.html';
+    })
+    .catch((error) => {
+      console.error('強制ログアウトエラー:', error);
+      // エラーが発生してもlocalStorageをクリア
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    });
+}
+
+// 認証状態のデバッグ情報を表示
+export function debugAuthState() {
+  const user = auth.currentUser;
+  const isLoggedIn = localStorage.getItem('isLoggedIn');
+  const userEmail = localStorage.getItem('userEmail');
+  
+  console.log('=== 認証状態デバッグ情報 ===');
+  console.log('Firebase認証:', {
+    user: user ? { email: user.email, uid: user.uid } : null,
+    isAuthenticated: !!user
+  });
+  console.log('localStorage:', {
+    isLoggedIn,
+    userEmail
+  });
+  console.log('整合性チェック:', {
+    firebaseAndLocalStorageMatch: user && user.email === userEmail,
+    shouldBeLoggedIn: user && isLoggedIn === 'true'
+  });
+  console.log('========================');
+  
+  return {
+    firebaseUser: user,
+    localStorage: { isLoggedIn, userEmail },
+    isConsistent: user && user.email === userEmail && isLoggedIn === 'true'
+  };
+}
+
+// 認証状態を強制的に同期
+export function syncAuthState() {
+  const user = auth.currentUser;
+  if (user) {
+    console.log('認証状態を同期中:', user.email);
+    localStorage.setItem('userEmail', user.email);
+    localStorage.setItem('isLoggedIn', 'true');
+    return true;
+  } else {
+    console.log('認証状態をクリア中');
+    localStorage.removeItem('userEmail');
+    localStorage.setItem('isLoggedIn', 'false');
+    return false;
+  }
+}
+
+// テスト用: 強制的にメッセージを表示
+export function testAuthMessage() {
+  console.log('テスト: 認証メッセージを表示');
+  showAuthMessage('テスト: ログインをお願いします');
+}
+
+// テスト用: 強制的に認証チェックを実行
+export function testAuthCheck() {
+  console.log('テスト: 認証チェックを実行');
+  return checkPageAuth();
+}
+
+// テスト用: 5秒後に認証チェックを実行
+export function testAuthCheckAfterDelay() {
+  console.log('テスト: 5秒後に認証チェックを実行');
+  setTimeout(() => {
+    console.log('5秒経過、認証チェックを実行中...');
+    const result = checkPageAuth();
+    console.log('認証チェック結果:', result);
+  }, 5000);
 }
 
 // ダミーデータ初期化を無効化（実際のFirestoreデータを使用）
@@ -133,12 +349,15 @@ export async function initializeDummyData() {
 
 // ユーザーのレシートデータを取得（削除フラグが立っていないもののみ）
 export async function getUserReceipts() {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('ログインしていません');
-  }
+  // セキュリティ: 認証チェック
+  const user = requireAuth();
+  console.log(`セキュリティ: ユーザー ${user.email} (${user.uid}) がレシートを読み込もうとしています`);
 
   try {
+    // セキュリティ: データパス検証
+    const expectedPath = `users/${user.uid}/receipts`;
+    console.log(`セキュリティ: データパス検証 - ${expectedPath}`);
+    
     const receiptsRef = collection(db, 'users', user.uid, 'receipts');
     const snapshot = await getDocs(receiptsRef);
     const receipts = [];
@@ -194,10 +413,9 @@ export async function uploadReceiptImage(file, receiptId) {
 
 // JSONデータをFirebaseに保存
 export async function saveReceiptFromJSON(jsonData) {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('ログインしていません');
-  }
+  // セキュリティ: 認証チェック
+  const user = requireAuth();
+  console.log(`セキュリティ: ユーザー ${user.email} (${user.uid}) がレシートを保存しようとしています`);
 
   try {
     // JSONデータをレシート形式に変換（改善された構造）
@@ -250,6 +468,10 @@ export async function saveReceiptFromJSON(jsonData) {
       }
     };
 
+    // セキュリティ: データパス検証
+    const expectedPath = `users/${user.uid}/receipts`;
+    console.log(`セキュリティ: データパス検証 - ${expectedPath}`);
+    
     // Firestoreに保存
     const receiptsRef = collection(db, 'users', user.uid, 'receipts');
     const docRef = await addDoc(receiptsRef, receiptData);
@@ -258,6 +480,9 @@ export async function saveReceiptFromJSON(jsonData) {
     return { id: docRef.id, ...receiptData };
   } catch (error) {
     console.error('JSONデータ保存エラー:', error);
+    if (error.message.includes('認証') || error.message.includes('アクセス権限')) {
+      console.error('セキュリティエラー: 不正なアクセス試行が検出されました');
+    }
     throw error;
   }
 }

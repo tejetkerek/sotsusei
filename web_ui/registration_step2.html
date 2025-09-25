@@ -29,16 +29,6 @@
             <div class="text-center mb-6">
             </div>
 
-            <!-- デバッグボタン（固定位置） -->
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                <h3 class="text-sm font-medium text-yellow-800 mb-2">デバッグツール</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="debugLocalStorage()" class="btn btn-xs btn-outline">デバッグ: localStorage確認</button>
-                    <button onclick="loadReceiptFromLocalStorage()" class="btn btn-xs btn-outline">手動読み込み</button>
-                    <button onclick="setTestData()" class="btn btn-xs btn-outline">テストデータ設定</button>
-                    <button onclick="clearLocalStorage()" class="btn btn-xs btn-outline">localStorageクリア</button>
-                </div>
-            </div>
             
             <!-- 現在のレシート -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
@@ -158,7 +148,6 @@
         // Firebase関数を読み込み
         async function loadFirebaseFunctions() {
             try {
-                console.log('Firebaseモジュールを読み込み中... (v2.1)');
                 
                 // ローディング表示を更新
                 const content = document.getElementById('receiptContent');
@@ -176,37 +165,47 @@
                 
                 // モジュールを読み込み
                 const firebaseModule = await import('./firebase-config.js');
-                console.log('Firebaseモジュール:', firebaseModule);
-                console.log('モジュールのキー:', Object.keys(firebaseModule));
                 
                 // 認証状態を確認（firebase-config.jsの認証状態を信頼）
+                console.log('認証状態を待機中...');
+                let isAuthenticated = false;
+                
                 if (firebaseModule.auth) {
                     const user = firebaseModule.auth.currentUser;
-                    console.log('現在のユーザー:', user);
-                    
-                    if (!user) {
-                        console.log('ユーザーがログインしていません。firebase-config.jsの認証状態を待機します...');
+                    if (user) {
+                        console.log('認証済み:', user.email);
+                        isAuthenticated = true;
+                    } else {
                         // 認証状態の変化を待機
                         await new Promise((resolve) => {
                             const unsubscribe = firebaseModule.auth.onAuthStateChanged((user) => {
                                 unsubscribe();
-                                console.log('認証状態変化を検出:', user?.email || 'ログアウト');
+                                if (user) {
+                                    console.log('認証確認完了:', user.email);
+                                    isAuthenticated = true;
+                                }
                                 resolve();
                             });
                         });
-                    } else {
-                        console.log('ユーザーは既にログインしています:', user.uid);
                     }
                 }
                 
-                // 各関数の存在確認
-                console.log('saveReceiptFromJSON:', firebaseModule.saveReceiptFromJSON);
-                console.log('auth:', firebaseModule.auth);
+                if (isAuthenticated) {
+                    console.log('認証済み、ページを継続');
+                } else {
+                    console.log('未認証、認証チェックを実行');
+                    // 5秒待ってから認証チェックを実行
+                    setTimeout(() => {
+                        console.log('認証チェックを実行中...');
+                        if (!firebaseModule.checkPageAuth()) {
+                            console.log('認証チェック失敗');
+                            return; // 認証失敗時はリダイレクトされる
+                        }
+                    }, 5000);
+                }
                 
                 // 関数の存在確認
                 if (!firebaseModule.saveReceiptFromJSON) {
-                    console.error('saveReceiptFromJSON関数が見つかりません');
-                    console.log('利用可能な関数:', Object.keys(firebaseModule));
                     showErrorMessage('saveReceiptFromJSON関数が見つかりません');
                     return;
                 }
@@ -217,19 +216,11 @@
                     auth: firebaseModule.auth
                 };
                 
-                console.log('Firebase関数の読み込み完了:', firebaseFunctions);
-                console.log('saveReceiptFromJSON関数の型:', typeof firebaseFunctions.saveReceiptFromJSON);
                 
                 // ユーザー情報を更新
                 updateUserInfo();
                 
-                // 利用可能な関数を確認
-                if (firebaseModule.getAvailableFunctions) {
-                    const availableFunctions = firebaseModule.getAvailableFunctions();
-                    console.log('利用可能な関数:', availableFunctions);
-                }
             } catch (error) {
-                console.error('Firebase関数の読み込みエラー:', error);
                 showErrorMessage('Firebase関数の読み込みに失敗しました: ' + error.message);
             }
         }
@@ -243,27 +234,12 @@
             if (currentReceipts.length === 0) return;
             
             const receipt = currentReceipts[currentIndex];
-            console.log('レシート表示更新:', receipt);
-            console.log('レシート画像URL:', receipt.imageUrl);
-            console.log('レシートの全プロパティ:', Object.keys(receipt));
             
-            // 画像URLの詳細確認
-            if (receipt.imageUrl) {
-                console.log('画像URLが存在:', receipt.imageUrl);
-            } else {
-                console.log('画像URLが存在しません');
-                // 代替の画像URLプロパティを確認
-                console.log('代替プロパティ確認:');
-                console.log('- image_url:', receipt.image_url);
-                console.log('- imageUrl:', receipt.imageUrl);
-                console.log('- image:', receipt.image);
-            }
             
             // ローディング表示を確実にクリア
             const content = document.getElementById('receiptContent');
             if (content) {
                 content.innerHTML = ''; // 既存の内容をクリア
-                console.log('receiptContentをクリアしました');
             }
             
             
@@ -271,13 +247,11 @@
             // レシート情報を更新（HTMLの構造に合わせて修正）
             const receiptInfoContainer = document.querySelector('.space-y-2');
             if (receiptInfoContainer) {
-                console.log('レシート情報コンテナを発見:', receiptInfoContainer);
                 
                 // 店舗名を更新
                 const storeNameElement = receiptInfoContainer.querySelector('span.font-medium.text-gray-800');
                 if (storeNameElement) {
                     storeNameElement.textContent = receipt.store?.name || receipt.storeName || '店舗名不明';
-                    console.log('店舗名を更新:', storeNameElement.textContent);
                 }
                 
                 // 金額を更新
@@ -288,7 +262,6 @@
                         const currency = receipt.transaction?.currency || 'JPY';
                         const amount = receipt.transaction?.amount || 0;
                         amountElement.textContent = `${currency} ${amount}`;
-                        console.log('金額を更新:', amountElement.textContent);
                     }
                 }
                 
@@ -297,11 +270,8 @@
                 if (jpyElement) {
                     const jpyAmount = receipt.transaction?.jpyAmount || 0;
                     jpyElement.textContent = `¥ ${jpyAmount}`;
-                    console.log('日本円換算を更新:', jpyElement.textContent);
                 }
                 
-            } else {
-                console.error('レシート情報コンテナが見つかりません');
             }
             
             // レシート詳細情報を更新（動的にフィールドを生成）
@@ -309,15 +279,10 @@
             if (!detailsContainer) {
                 // 別のセレクターで探す
                 const altDetailsContainer = document.querySelector('.space-y-2');
-                if (altDetailsContainer) {
-                    console.log('レシート詳細情報のコンテナを代替セレクターで発見:', altDetailsContainer);
-                }
             }
             
             const finalDetailsContainer = document.querySelector('.bg-white .space-y-2') || document.querySelector('.space-y-2');
             if (finalDetailsContainer) {
-                console.log('レシート詳細情報のコンテナを発見:', finalDetailsContainer);
-                console.log('レシートデータ:', receipt);
                 
                 // 既存の内容をクリア
                 finalDetailsContainer.innerHTML = '';
@@ -340,12 +305,10 @@
                         
                         const date = new Date(dateString);
                         if (isNaN(date.getTime())) {
-                            console.warn('無効な日付形式:', dateString);
                             return '';
                         }
                         return date.toISOString().split('T')[0];
                     } catch (error) {
-                        console.error('日付フォーマットエラー:', error, '入力値:', dateString);
                         return '';
                     }
                 };
@@ -444,7 +407,6 @@
                 `;
                 
                 finalDetailsContainer.innerHTML = fieldsHTML;
-                console.log('動的に生成されたレシート詳細情報:', fieldsHTML);
                 
                 // 金額変更時の日本円換算を更新
                 const amountInput = document.getElementById('amountInput');
@@ -481,8 +443,6 @@
                     
                     amountInput.addEventListener('input', updateJPYAmount);
                 }
-            } else {
-                console.error('レシート詳細情報のコンテナが見つかりません');
             }
             
             
@@ -525,7 +485,7 @@
                             
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">金額合計（日本円）:</span>
-                                <span class="font-medium text-blue-600">¥ ${receipt.transaction?.jpyAmount || receipt.jpyAmount || 0}</span>
+                                <span class="font-medium text-blue-600">¥ ${Math.round(receipt.transaction?.jpyAmount || receipt.jpyAmount || receipt.extracted_data?.jpyAmount || 0)}</span>
                             </div>
                             
                             <div class="flex justify-between text-sm">
@@ -541,10 +501,8 @@
                     </div>
                 `;
                 content.innerHTML = receiptHTML;
-                console.log('レシート情報をreceiptContentに追加しました');
             }
             
-            console.log('レシート表示が完了しました');
         }
         
         
@@ -556,15 +514,10 @@
             // より具体的なセレクターを使用（左端の開発リストを避ける）
             const progressElement = document.querySelector('.bg-white .flex.justify-between.items-center.mb-4');
             if (progressElement) {
-                console.log('進捗情報要素を発見:', progressElement);
-                console.log(`進捗情報更新: 処理済み=${processedCount}件, 残り=${remainingCount}件, 総数=${currentReceipts.length}件`);
                 progressElement.innerHTML = `
                     <span class="text-sm text-gray-600">処理済み: ${processedCount}件</span>
                     <span class="text-sm text-gray-600">残り: ${remainingCount}件</span>
                 `;
-                console.log('進捗情報の更新が完了しました');
-            } else {
-                console.error('進捗情報要素が見つかりません');
             }
         }
         
@@ -572,7 +525,6 @@
         function showLoadingMessage(message = 'レシートを読み込み中...') {
             const content = document.getElementById('receiptContent');
             if (!content) {
-                console.error('receiptContent要素が見つかりません');
                 return;
             }
             content.innerHTML = `
@@ -593,13 +545,11 @@
             const receiptInfo = document.getElementById('receiptInfo');
             if (receiptInfo) {
                 receiptInfo.innerHTML = '';
-                console.log('receiptInfo要素の内容をクリアしました');
             }
             
             // より具体的なセレクターを使用（左端の開発リストを避ける）
             const messageContainer = document.querySelector('.bg-white .bg-white.rounded-lg.shadow-sm.border.border-gray-200.mb-4');
             if (messageContainer) {
-                console.log('レシートなしメッセージのコンテナを発見:', messageContainer);
                 messageContainer.innerHTML = `
                     <div class="p-8 text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -612,8 +562,6 @@
                         </button>
                     </div>
                 `;
-            } else {
-                console.error('レシートなしメッセージのコンテナが見つかりません');
             }
         }
         
@@ -622,15 +570,12 @@
             // より具体的なセレクターを使用（左端の開発リストを避ける）
             const errorContainer = document.querySelector('.bg-white .bg-white.rounded-lg.shadow-sm.border.border-gray-200.mb-4');
             if (errorContainer) {
-                console.log('エラーメッセージのコンテナを発見:', errorContainer);
                 errorContainer.innerHTML = `
                     <div class="p-8 text-center">
                         <div class="text-red-600 mb-4">${message}</div>
                         <button onclick="location.reload()" class="btn btn-outline">再読み込み</button>
                     </div>
                 `;
-            } else {
-                console.error('エラーメッセージのコンテナが見つかりません');
             }
         }
         
@@ -641,12 +586,10 @@
         window.handleConfirmation = async function() {
             // 重複実行を防ぐ
             if (isProcessingConfirmation) {
-                console.log('承認処理が既に実行中です');
                 return;
             }
             
             isProcessingConfirmation = true;
-            console.log('承認処理開始');
             
             try {
                 // localStorageから分析結果を取得
@@ -659,31 +602,19 @@
                 let receiptData;
                 try {
                     receiptData = JSON.parse(analysisData);
-                    console.log('承認するレシートデータ:', receiptData);
                 } catch (error) {
-                    console.error('分析結果の解析エラー:', error);
                     alert('分析結果の解析に失敗しました。');
                     return;
                 }
                 
                 // Firebase関数が読み込まれているかチェック
-                console.log('Firebase関数の確認中...');
-                console.log('firebaseFunctions:', firebaseFunctions);
-                console.log('firebaseFunctions.saveReceiptFromJSON:', firebaseFunctions?.saveReceiptFromJSON);
                 
                 if (!firebaseFunctions || !firebaseFunctions.saveReceiptFromJSON) {
-                    console.error('Firebase関数が読み込まれていません');
                     alert('Firebase関数が読み込まれていません。ページを再読み込みしてください。');
                     return;
                 }
                 
-                console.log('Firebase関数の確認完了');
                 // データ構造を確認して適切に変換
-                console.log('データ構造の確認中...');
-                console.log('receiptDataの構造:', receiptData);
-                console.log('receiptData.store:', receiptData.store);
-                console.log('receiptData.transaction:', receiptData.transaction);
-                console.log('receiptData.extracted_data:', receiptData.extracted_data);
                 
                 // 修正されたデータがある場合はそれを使用、なければ元のデータを使用
                 const finalReceiptData = {
@@ -707,9 +638,6 @@
                     confidence: receiptData.confidence || 0.95
                 };
                 
-                console.log('変換後のレシートデータ:', finalReceiptData);
-                console.log('Firebase関数の確認:', firebaseFunctions);
-                console.log('saveReceiptFromJSON関数の確認:', firebaseFunctions.saveReceiptFromJSON);
                 
                 // Firebase Databaseに保存
                 console.log('Firebase Databaseに保存中...');
@@ -1483,55 +1411,6 @@
             }
         }
         
-        // デバッグ関数
-        function debugLocalStorage() {
-            console.log('=== localStorage デバッグ情報 ===');
-            const analysisData = localStorage.getItem('currentReceiptAnalysis');
-            console.log('currentReceiptAnalysis:', analysisData);
-            
-            if (analysisData) {
-                try {
-                    const parsed = JSON.parse(analysisData);
-                    console.log('解析されたデータ:', parsed);
-                    alert('localStorageにデータがあります。コンソールを確認してください。');
-                } catch (error) {
-                    console.error('JSON解析エラー:', error);
-                    alert('JSON解析エラー: ' + error.message);
-                }
-            } else {
-                console.log('localStorageにデータがありません');
-                alert('localStorageにデータがありません');
-            }
-        }
-        
-        function clearLocalStorage() {
-            localStorage.removeItem('currentReceiptAnalysis');
-            console.log('localStorageをクリアしました');
-            alert('localStorageをクリアしました');
-            location.reload();
-        }
-        
-        function setTestData() {
-            const testData = {
-                receipt_id: 'test_receipt_001',
-                image_url: 'test_image_url',
-                extracted_data: {
-                    storeName: 'テスト店舗',
-                    date: '2024-01-15',
-                    currency: 'RM',
-                    totalAmount: '25.50',
-                    location: 'クアラルンプール',
-                    category: 'food',
-                    jpyAmount: 850
-                },
-                processed_at: new Date().toISOString(),
-                confidence: 0.95
-            };
-            
-            localStorage.setItem('currentReceiptAnalysis', JSON.stringify(testData));
-            console.log('テストデータを設定しました:', testData);
-            alert('テストデータを設定しました。手動読み込みボタンをクリックしてください。');
-        }
         
         // テストデータ設定関数
         

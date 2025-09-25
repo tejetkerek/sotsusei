@@ -29,9 +29,9 @@
         <div class="w-full bg-white min-h-screen">
             <!-- ナビゲーションヘッダー（動的に生成される） -->
             
-            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-16 pb-16">
+            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-20 pb-16">
                             <!-- ヘッダー -->
-                            <div class="text-center mb-6">
+                            <div class="text-center mb-8">
                                 <h1 class="text-xl font-bold text-gray-800">ログイン</h1>
                                 <p class="text-sm text-gray-600 mt-2">アカウントにログインしてください</p>
                                 
@@ -41,6 +41,7 @@
                                     <p class="text-xs text-blue-600">ID: admin@test.com</p>
                                     <p class="text-xs text-blue-600">PW: testtest</p>
                                 </div>
+                                
                             </div>
 
                             <!-- ログインフォーム -->
@@ -146,6 +147,12 @@
             // Firebase関数を読み込み
             await loadFirebaseFunctions();
             
+            // 既にログイン済みの場合はサマリページにリダイレクト
+            const firebaseModule = await import('./firebase-config.js');
+            if (!firebaseModule.checkLoginPageAuth()) {
+                return; // リダイレクトされる
+            }
+            
 
             // ログインボタン
             document.getElementById('loginBtn').addEventListener('click', function() {
@@ -175,26 +182,17 @@
                 // Firebase認証でログイン
                 loginUser(email, password)
                     .then(async (user) => {
-                        showSuccess('ログインが完了しました！');
+                        showSuccess('ログインが成功しました！');
                         console.log('ログイン成功:', user);
                         
                         // localStorageに認証状態を保存
                         localStorage.setItem('userEmail', user.email);
                         localStorage.setItem('isLoggedIn', 'true');
                     
-                    // admin@test.comの場合、ダミーデータを初期化
-                    if (user.email === 'admin@test.com') {
-                        try {
-                            await initializeDummyData();
-                            console.log('ダミーデータの初期化が完了しました');
-                        } catch (error) {
-                            console.error('ダミーデータ初期化エラー:', error);
-                        }
-                    }
                     
-                    // 3秒後にメイン画面に遷移
+                    // 3秒後にサマリ画面に遷移
                     setTimeout(() => {
-                        window.location.href = 'registration_step1.html';
+                        window.location.href = 'registration_step3.html';
                     }, 3000);
                 })
                 .catch((error) => {

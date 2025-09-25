@@ -19,7 +19,28 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*test*.html",
+      "**/*debug*.html",
+      "**/*demo*.html",
+      "**/dev_menu.html",
+      "**/data_display_test.html",
+      "**/firebase_simple_test.html",
+      "**/firebase_test.html",
+      "**/json_to_firebase_test.html",
+      "**/simple_login.html",
+      "**/test_login.html",
+      "**/standalone.html",
+      "**/receipt_capture.html",
+      "**/receipt_confirm.html",
+      "**/registration_integrated.html",
+      "**/registration_memories.html",
+      "**/expense_summary.html",
+      "**/gemini_receipt_processor.html",
+      "**/script.js",
+      "**/style.css",
+      "**/sw.js",
+      "**/manifest.json"
     ],
     "rewrites": [
       {

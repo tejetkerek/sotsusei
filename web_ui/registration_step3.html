@@ -29,7 +29,7 @@
         <div class="w-full bg-white min-h-screen">
             <!-- ナビゲーションヘッダー（動的に生成される） -->
             
-            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-16 pb-16">
+            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-20 pb-16">
             <!-- ヘッダー -->
             <div class="text-center mb-8">
                 <h1 class="text-xl font-bold text-gray-800">サマリー情報</h1>
@@ -51,7 +51,7 @@
                                     <span class="text-gray-500 self-center text-sm">〜</span>
                                     <input type="date" id="endDate" class="input input-bordered input-sm flex-1">
                                 </div>
-                                <button onclick="setCustomPeriod()" class="btn btn-sm bg-amber-600 hover:bg-amber-700 text-white w-full">
+                                <button onclick="setCustomPeriod()" class="btn btn-sm bg-amber-600 hover:bg-amber-700 text-white w-full px-[20%]">
                                     適用
                                 </button>
                             </div>
@@ -73,22 +73,34 @@
                         <!-- 日付別推移グラフ -->
                         <div class="bg-gray-50 rounded-lg p-3">
                             <div class="h-48 bg-white rounded relative">
+                                <!-- ローディング表示 -->
+                                <div id="loadingIndicator" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
+                                    <div class="text-center">
+                                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2"></div>
+                                        <p class="text-sm text-gray-600">最新データ取得中...</p>
+                                    </div>
+                                </div>
                                 <!-- グラフエリア -->
-                                <div class="ml-8 h-full relative px-2 py-2">
+                                <div id="graphArea" class="ml-8 h-full relative px-2 py-2">
                                     <!-- グラフは動的に生成される -->
                                 </div>
                             </div>
                         </div>
-                        
-                       
-                        
-                        <!-- アクションリンク -->
-                        <div class="text-center">
-                            <a href="registration_step1.html" class="btn btn-outline btn-sm">
-                                新たなレシートを追加する
-                            </a>
-                        </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- アクションリンク（グラフエリアの外） -->
+            <div class="text-center mt-4 space-y-2">
+                <div class="flex justify-center px-[20%]">
+                    <a href="registration_step1.html" class="btn btn-outline btn-sm w-full">
+                        新たなレシートを追加
+                    </a>
+                </div>
+                <div class="flex justify-center px-[20%]">
+                    <a href="all_receipts.html" class="btn btn-outline btn-sm w-full">
+                        レシート一覧を確認
+                    </a>
                 </div>
             </div>
             </div>
@@ -100,40 +112,94 @@
         // Firebase関数を動的インポート
         let firebaseFunctions;
         
+        // ローディング表示制御
+        function showLoading() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'flex';
+            }
+        }
+        
+        function hideLoading() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+        
         // Firebase関数を読み込み
         async function loadFirebaseFunctions() {
             try {
+                // ローディング表示開始
+                showLoading();
+                
                 const firebaseModule = await import('./firebase-config.js');
                 firebaseFunctions = firebaseModule;
                 console.log('Firebase関数の読み込みが完了しました');
                 
-                // ユーザー情報を表示
-                updateUserInfo();
+                // 認証状態を待ってからチェック
+                console.log('認証状態を待機中...');
+                const isAuthenticated = await waitForAuth();
                 
-                // 認証状態を待ってからグラフを読み込み
-                await waitForAuth();
+                if (isAuthenticated) {
+                    console.log('認証済み、ページを継続');
+                    // ユーザー情報を表示
+                    updateUserInfo();
+                    
+                    // デフォルトで全期間を設定（Firebase関数読み込み後）
+                    setPeriod('all');
+                    
+                    // グラフを読み込み
+                    loadGraphData();
+                } else {
+                    console.log('未認証、認証チェックを実行');
+                    // 5秒待ってから認証チェックを実行
+                    setTimeout(() => {
+                        console.log('認証チェックを実行中...');
+                        if (!firebaseModule.checkPageAuth()) {
+                            console.log('認証チェック失敗');
+                            hideLoading();
+                            return; // 認証失敗時はリダイレクトされる
+                        }
+                    }, 5000);
+                }
             } catch (error) {
                 console.error('Firebase関数の読み込みエラー:', error);
+                hideLoading();
             }
         }
         
         // 認証状態を待つ関数
         async function waitForAuth() {
             return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5秒間（100ms × 50回）
+                
                 const checkAuth = () => {
+                    attempts++;
+                    
                     if (firebaseFunctions && firebaseFunctions.auth) {
                         const user = firebaseFunctions.auth.currentUser;
+                        console.log(`認証確認試行 ${attempts}/${maxAttempts}:`, user ? user.email : '未認証');
+                        
                         if (user) {
-                            console.log('認証状態確認完了:', user.email);
-                            loadGraphData();
-                            resolve();
+                            console.log('認証確認完了:', user.email);
+                            resolve(true);
+                        } else if (attempts >= maxAttempts) {
+                            console.log('認証確認タイムアウト: 未認証');
+                            resolve(false);
                         } else {
                             // 認証状態がまだ確定していない場合、少し待って再試行
                             setTimeout(checkAuth, 100);
                         }
                     } else {
-                        // Firebase関数がまだ読み込まれていない場合、少し待って再試行
-                        setTimeout(checkAuth, 100);
+                        if (attempts >= maxAttempts) {
+                            console.log('Firebase関数読み込みタイムアウト');
+                            resolve(false);
+                        } else {
+                            // Firebase関数がまだ読み込まれていない場合、少し待って再試行
+                            setTimeout(checkAuth, 100);
+                        }
                     }
                 };
                 checkAuth();
@@ -297,16 +363,24 @@
                 const filteredReceipts = filterReceiptsByPeriod(allReceipts);
                 updateGraphDisplay(filteredReceipts);
             } else {
-                // データがない場合は再読み込み
+                // データがない場合は再読み込み（ローディング表示開始）
+                showLoading();
                 loadGraphData();
             }
         }
-        
+
         // グラフデータを読み込み
         async function loadGraphData() {
             try {
                 if (!firebaseFunctions || !firebaseFunctions.getUserReceipts) {
                     console.error('getUserReceipts関数が見つかりません');
+                    return;
+                }
+
+                // 認証を待機
+                const isAuthenticated = await waitForAuth();
+                if (!isAuthenticated) {
+                    console.error('認証が必要です。ログインしてください。');
                     return;
                 }
 
@@ -354,8 +428,14 @@
                 // グラフを更新
                 updateGraphDisplay(filteredReceipts);
                 
+                // ローディング表示を非表示
+                hideLoading();
+                
             } catch (error) {
                 console.error('グラフデータの読み込みエラー:', error);
+                
+                // ローディング表示を非表示
+                hideLoading();
                 
                 // 認証エラーの場合は適切なメッセージを表示
                 if (error.message && error.message.includes('ログインしていません')) {
@@ -433,10 +513,49 @@
                 'shopping': '買い物',
                 'healthcare': '医療費',
                 'education': '教育費',
-                'other': 'その他'
+                'other': 'その他',
+                '食費': '食費',
+                '交通費': '交通費',
+                '宿泊費': '宿泊費',
+                '娯楽費': '娯楽費',
+                '買い物': '買い物',
+                '医療費': '医療費',
+                '教育費': '教育費',
+                'その他': 'その他'
             };
             
             return categoryMap[category.toLowerCase()] || category;
+        }
+        
+        // 日本円換算金額を取得（Geminiが計算した値を使用）
+        function getJpyAmount(receipt) {
+            // Geminiが計算した日本円換算額を優先的に取得
+            // 複数の場所から日本円換算額を取得（優先順位付き）
+            const jpyAmount = receipt.transaction?.jpyAmount || 
+                            receipt.extracted_data?.jpyAmount || 
+                            receipt.extracted_data?.total_jpy || 
+                            receipt.jpyAmount || 
+                            0;
+            
+            const originalAmount = receipt.transaction?.amount || receipt.totalAmount || receipt.extracted_data?.totalAmount || 0;
+            const currency = receipt.transaction?.currency || receipt.currency || receipt.extracted_data?.currency || 'JPY';
+            
+            
+            // Geminiが計算した日本円換算額が存在する場合はそれを使用
+            if (jpyAmount > 0) {
+                return jpyAmount;
+            }
+            
+            // 日本円換算額が0円または未設定の場合
+            if (currency === 'JPY') {
+                // 日本円の場合は元金額をそのまま使用
+                return originalAmount;
+            } else {
+                // 外国通貨で日本円換算額が未設定の場合は、元金額をそのまま表示
+                // （Geminiが換算していない場合は、手動で換算する必要がある）
+                console.warn(`日本円換算額が未設定: ${currency} ${originalAmount}`);
+                return originalAmount;
+            }
         }
         
         // 期間に基づいてレシートをフィルタリング
@@ -462,26 +581,10 @@
                              currentPeriod === '3months' ? '3ヶ月' :
                              currentPeriod === 'year' ? '1年' : 'カスタム期間';
             
-            // レシートデータから統計を計算
+            // レシートデータから統計を計算（日本円換算値の合算）
             const totalAmount = Math.round(receipts.reduce((sum, receipt) => {
-                // jpyAmountが存在する場合はそれを使用（修正済みレシート）
-                if (receipt.jpyAmount) {
-                    return sum + receipt.jpyAmount;
-                }
-                
-                // 従来の計算方法（jpyAmountがない場合）
-                const amount = receipt.transaction?.amount || receipt.totalAmount || 0;
-                const currency = receipt.transaction?.currency || receipt.currency || 'JPY';
-                
-                // JPYに換算（簡易版）
-                if (currency === 'JPY') {
-                    return sum + amount;
-                } else if (currency === 'USD') {
-                    return sum + (amount * 150); // 簡易換算
-                } else if (currency === 'EUR') {
-                    return sum + (amount * 160); // 簡易換算
-                }
-                return sum + amount;
+                const jpyAmount = getJpyAmount(receipt);
+                return sum + jpyAmount;
             }, 0));
             
             const receiptCount = receipts.length;
@@ -493,74 +596,67 @@
                 // カテゴリ名を日本語に変換
                 category = translateCategory(category);
                 
-                // jpyAmountが存在する場合はそれを使用（修正済みレシート）
-                let jpyAmount;
-                if (receipt.jpyAmount) {
-                    jpyAmount = receipt.jpyAmount;
-                } else {
-                    // 従来の計算方法（jpyAmountがない場合）
-                    const amount = receipt.transaction?.amount || receipt.totalAmount || 0;
-                    const currency = receipt.transaction?.currency || receipt.currency || 'JPY';
-                    
-                    jpyAmount = amount;
-                    if (currency === 'USD') {
-                        jpyAmount = amount * 150;
-                    } else if (currency === 'EUR') {
-                        jpyAmount = amount * 160;
-                    }
-                }
+                // 日本円換算金額を取得
+                const jpyAmount = getJpyAmount(receipt);
                 
                 categoryTotals[category] = (categoryTotals[category] || 0) + Math.round(jpyAmount);
             });
             
-            // 日別集計（折れ線グラフ用）
+            // 日別集計
             const dailyTotals = {};
             receipts.forEach(receipt => {
                 const dateStr = receipt.transaction?.date || receipt.date;
                 
-                // jpyAmountが存在する場合はそれを使用（修正済みレシート）
-                let jpyAmount;
-                if (receipt.jpyAmount) {
-                    jpyAmount = receipt.jpyAmount;
-                } else {
-                    // 従来の計算方法（jpyAmountがない場合）
-                    const amount = receipt.transaction?.amount || receipt.totalAmount || 0;
-                    const currency = receipt.transaction?.currency || receipt.currency || 'JPY';
-                    
-                    jpyAmount = amount;
-                    if (currency === 'USD') {
-                        jpyAmount = amount * 150;
-                    } else if (currency === 'EUR') {
-                        jpyAmount = amount * 160;
-                    }
-                }
+                // 日本円換算金額を取得
+                const jpyAmount = getJpyAmount(receipt);
                 
-                dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + Math.round(jpyAmount);
+                if (dateStr) {
+                    dailyTotals[dateStr] = (dailyTotals[dateStr] || 0) + Math.round(jpyAmount);
+                }
             });
             
             // グラフHTMLを生成
             graphContainer.innerHTML = `
                 <div class="space-y-4">
-                    <h4 class="font-medium text-gray-800 text-center">支出分析</h4>
+                    <h4 class="font-medium text-gray-800 text-center"></h4>
                     
                     <!-- 統計サマリー -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-white p-3 rounded border text-center">
-                            <div class="text-gray-600 text-sm">総支出</div>
+                            <div class="text-gray-600 text-sm">支出金額</div>
                             <div class="font-bold text-lg text-blue-600">¥${totalAmount.toLocaleString()}</div>
                         </div>
                         <div class="bg-white p-3 rounded border text-center">
-                            <div class="text-gray-600 text-sm">レシート数</div>
+                            <div class="text-gray-600 text-sm">レシート件数</div>
                             <div class="font-bold text-lg text-green-600">${receiptCount}件</div>
                         </div>
                     </div>
                     
-                    <!-- 折れ線グラフ（日別支出） -->
+                    <!-- 日別支出一覧 -->
                     <div class="bg-white p-3 rounded border">
-                        <h5 class="font-medium text-gray-700 mb-2 text-center">日別支出推移</h5>
-                        <div class="h-40 bg-gray-50 rounded pb-8">
-                            ${generateLineChart(dailyTotals)}
-                        </div>
+                        <h5 class="font-medium text-gray-700 mb-2 text-center">日別支出</h5>
+                        ${Object.keys(dailyTotals).length === 0 ? 
+                            '<div class="text-center py-4 text-gray-500">データなし</div>' :
+                            Object.entries(dailyTotals)
+                                .sort(([a], [b]) => new Date(a) - new Date(b))
+                                .map(([date, amount]) => `
+                                    <div class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded mb-2">
+                                        <div class="flex-1">
+                                            <div class="font-medium text-gray-800">
+                                                ${new Date(date).toLocaleDateString('ja-JP', { 
+                                                    year: 'numeric', 
+                                                    month: '2-digit', 
+                                                    day: '2-digit',
+                                                    weekday: 'short'
+                                                })}
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-semibold text-gray-900">¥${Math.round(amount).toLocaleString()}</div>
+                                        </div>
+                                    </div>
+                                `).join('')
+                        }
                     </div>
                     
                     <!-- カテゴリ別支出一覧 -->
@@ -606,8 +702,8 @@
             `;
         }
         
-        // 折れ線グラフを生成
-        function generateLineChart(dailyTotals) {
+        // 棒グラフを生成
+        function generateBarChart(dailyTotals) {
             const dates = Object.keys(dailyTotals).sort();
             
             if (dates.length === 0) {
@@ -617,88 +713,87 @@
             const maxAmount = Math.max(...Object.values(dailyTotals));
             const roundedMaxAmount = Math.round(maxAmount);
             
-            // Y軸の目盛りを生成
+            // Y軸の目盛りを生成（わかりやすい単位で区切り）
             const yAxisLabels = [];
-            for (let i = 0; i <= 5; i++) {
-                const value = Math.round((roundedMaxAmount / 5) * i);
-                yAxisLabels.push(value);
+            let stepSize;
+            
+            if (roundedMaxAmount <= 1000) {
+                stepSize = 200; // 1000円以下は200円単位
+            } else if (roundedMaxAmount <= 5000) {
+                stepSize = 500; // 5000円以下は500円単位
+            } else if (roundedMaxAmount <= 20000) {
+                stepSize = 1000; // 20000円以下は1000円単位
+            } else if (roundedMaxAmount <= 50000) {
+                stepSize = 5000; // 50000円以下は5000円単位
+            } else {
+                stepSize = 10000; // 50000円以上は10000円単位
             }
             
-            // データポイントの座標を計算
-            const points = dates.map((date, index) => {
-                const amount = Math.round(dailyTotals[date]);
-                // 左右に10%の余白を追加
-                const x = 10 + (index / (dates.length - 1)) * 80; // 10-90%の範囲
-                // 上下に余白を追加（0円の位置を85%に設定）
-                const y = 10 + (100 - (amount / maxAmount) * 75); // 10-85%の範囲（Y軸反転）
-                return { x, y, amount, date };
-            });
+            // 最大値を丸めて、適切な区切りで目盛りを生成
+            const roundedMax = Math.ceil(roundedMaxAmount / stepSize) * stepSize;
+            const steps = Math.min(6, Math.ceil(roundedMax / stepSize) + 1);
             
-            // SVGパスを生成（滑らかな折れ線）
-            const pathData = points.map((point, index) => {
-                if (index === 0) {
-                    return `M ${point.x} ${point.y}`;
-                } else {
-                    const prevPoint = points[index - 1];
-                    const cp1x = prevPoint.x + (point.x - prevPoint.x) * 0.3;
-                    const cp1y = prevPoint.y;
-                    const cp2x = prevPoint.x + (point.x - prevPoint.x) * 0.7;
-                    const cp2y = point.y;
-                    return `C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${point.x} ${point.y}`;
+            for (let i = 0; i < steps; i++) {
+                const value = i * stepSize;
+                if (value <= roundedMax) {
+                    yAxisLabels.push(value);
                 }
-            }).join(' ');
+            }
+            
+            // 棒グラフのバーを生成（横棒グラフ）
+            const bars = dates.map((date, index) => {
+                const amount = Math.round(dailyTotals[date]);
+                const totalHeight = 75; // グラフエリアの総高さ
+                const barHeight = totalHeight / dates.length; // 各バーの高さ
+                const barWidth = (amount / roundedMax) * 80; // バーの幅（新しい最大値基準）
+                const x = 10; // バーのX位置（左端から開始）
+                const y = 10 + (index * barHeight); // バーのY位置（余白なし）
+                const barHeightPx = barHeight * 0.2; // 実際のバー高さ（20%に縮小して間隔を最大限に広げる）
+                const barY = y + (barHeight * 0.4); // バーの実際のY位置（中央に配置）
+                
+                return { x, y: barY, barWidth, barHeight: barHeightPx, amount, date, originalY: y, barHeight: barHeight };
+            });
             
             return `
                 <div class="flex h-full">
-                    <!-- Y軸 -->
-                    <div class="flex flex-col justify-between pr-2 text-xs text-gray-600">
-                        ${yAxisLabels.reverse().map(value => 
-                            `<div class="text-right">¥${value.toLocaleString()}</div>`
-                        ).join('')}
+                    <!-- Y軸（日付） -->
+                    <div class="relative pr-2 text-xs text-gray-600" style="height: 100%;">
+                        ${dates.map((date, index) => {
+                            const totalHeight = 75; // グラフエリアの総高さ
+                            const barHeight = totalHeight / dates.length; // 各バーの高さ
+                            const yPosition = 10 + (index * barHeight) + (barHeight * 0.5); // バーの中央位置
+                            return `<div class="text-left absolute" style="top: ${yPosition}%; transform: translateY(-50%);">${new Date(date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}</div>`;
+                        }).join('')}
                     </div>
                     
                     <!-- グラフエリア -->
                     <div class="flex-1 relative px-2 py-2 border-l border-b border-gray-300">
                         <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style="shape-rendering: geometricPrecision;">
-                            <!-- グリッド線 -->
+                            <!-- グリッド線（縦線） -->
                             ${yAxisLabels.map((_, index) => {
-                                const y = 10 + (index / (yAxisLabels.length - 1)) * 75;
-                                return `<line x1="10" y1="${y}" x2="90" y2="${y}" stroke="#e5e7eb" stroke-width="0.2"/>`;
+                                const x = 10 + (index / (yAxisLabels.length - 1)) * 80;
+                                return `<line x1="${x}" y1="10" x2="${x}" y2="85" stroke="#e5e7eb" stroke-width="0.2"/>`;
                             }).join('')}
                             
-                            <!-- 折れ線 -->
-                            <path d="${pathData}" 
-                                  fill="none" 
-                                  stroke="#3B82F6" 
-                                  stroke-width="1.5" 
-                                  stroke-linecap="round" 
-                                  stroke-linejoin="round"
-                                  style="filter: drop-shadow(0 1px 2px rgba(59, 130, 246, 0.3));"/>
-                            
-                            <!-- データポイント -->
-                            ${points.map(point => `
-                                <circle cx="${point.x}" 
-                                        cy="${point.y}" 
-                                        r="2.5" 
-                                        fill="#3B82F6" 
-                                        stroke="white" 
-                                        stroke-width="1.5"
-                                        style="filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));"
-                                        class="hover:r-4 transition-all cursor-pointer"
-                                        title="${new Date(point.date).toLocaleDateString('ja-JP')}: ¥${point.amount.toLocaleString()}"/>
+                            <!-- 棒グラフ -->
+                            ${bars.map(bar => `
+                                <rect x="${bar.x}" 
+                                      y="${bar.y}" 
+                                      width="${bar.barWidth}" 
+                                      height="${bar.barHeight}" 
+                                      fill="#3B82F6" 
+                                      opacity="0.8"
+                                      style="filter: drop-shadow(0 1px 2px rgba(59, 130, 246, 0.3));"
+                                      title="${new Date(bar.date).toLocaleDateString('ja-JP')}: ¥${bar.amount.toLocaleString()}"/>
                             `).join('')}
                         </svg>
                         
-                        <!-- X軸ラベル -->
+                        <!-- X軸ラベル（金額） -->
                         <div class="absolute -bottom-6 left-0 right-0 flex justify-between px-2">
-                            ${dates.map((date, index) => {
-                                const dateObj = new Date(date);
-                                const month = dateObj.getMonth() + 1;
-                                const day = dateObj.getDate();
-                                const dateLabel = `${month}/${day}`;
-                                // データポイントの位置に合わせてラベルを配置
-                                const labelPosition = 10 + (index / (dates.length - 1)) * 80;
-                                return `<div class="text-xs text-gray-500 transform -rotate-45 origin-left whitespace-nowrap absolute" style="left: ${labelPosition}%;">${dateLabel}</div>`;
+                            ${yAxisLabels.map((value, index) => {
+                                // 金額ラベルの位置に合わせて配置
+                                const labelPosition = 10 + (index / (yAxisLabels.length - 1)) * 80;
+                                return `<div class="text-xs text-gray-500 transform -rotate-45 origin-left whitespace-nowrap absolute" style="left: ${labelPosition}%;">¥${value.toLocaleString()}</div>`;
                             }).join('')}
                         </div>
                     </div>
@@ -782,21 +877,14 @@
         
         // ページ読み込み時にFirebase関数を読み込み
         document.addEventListener('DOMContentLoaded', function() {
-            loadFirebaseFunctions();
-            
-            // デフォルトで全期間を設定
-            setPeriod('all');
-            
             // 今日の日付をデフォルトで設定
             const today = new Date().toISOString().split('T')[0];
             const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
             document.getElementById('endDate').value = today;
             document.getElementById('startDate').value = oneMonthAgo;
             
-            // 自動でグラフを読み込み
-            setTimeout(() => {
-                loadGraphData();
-            }, 1000);
+            // Firebase関数を読み込み（ローディング表示も含む）
+            loadFirebaseFunctions();
         });
     </script>
 </body>

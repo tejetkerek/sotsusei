@@ -32,38 +32,38 @@ class NavigationManager {
             </div>
             
             <!-- ドロップダウンメニュー -->
-            <div id="dropdownMenu" class="absolute top-full left-0 right-0 bg-white shadow-lg border border-gray-200 rounded-b-lg hidden z-50">
+            <div id="dropdownMenu" class="absolute top-full right-0 bg-white shadow-lg border border-gray-200 rounded-lg hidden z-50 min-w-48">
                 <div class="py-2">
                     <div id="loginMenuItem" class="block px-4 py-3 text-slate-800 hover:bg-slate-50 border-b border-slate-200">
                         <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 mr-3 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                             </svg>
-                            <span id="loginMenuText" class="text-base whitespace-nowrap">ログイン</span>
+                            <span id="loginMenuText" class="text-sm sm:text-base whitespace-nowrap">ログイン</span>
                         </div>
                     </div>
                     <a href="registration_step1.html" class="block px-4 py-3 text-slate-800 hover:bg-slate-50 border-b border-slate-200">
                         <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 mr-3 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
-                            <span class="text-base whitespace-nowrap">レシート登録</span>
+                            <span class="text-sm sm:text-base whitespace-nowrap">レシート登録</span>
                         </div>
                     </a>
                     <a href="registration_step3.html" class="block px-4 py-3 text-slate-800 hover:bg-slate-50 border-b border-slate-200">
                         <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 mr-3 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                             </svg>
-                            <span class="text-base whitespace-nowrap">サマリ</span>
+                            <span class="text-sm sm:text-base whitespace-nowrap">サマリ</span>
                         </div>
                     </a>
                     <a href="all_receipts.html" class="block px-4 py-3 text-slate-800 hover:bg-slate-50">
                         <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 mr-3 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                             </svg>
-                            <span class="text-base whitespace-nowrap">レシート一覧</span>
+                            <span class="text-sm sm:text-base whitespace-nowrap">レシート一覧</span>
                         </div>
                     </a>
                 </div>
@@ -150,21 +150,41 @@ class NavigationManager {
         if (isLoggedIn && userEmail) {
             // ログイン中の表示
             loginMenuItem.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center flex-1 min-w-0">
+                        <svg class="w-4 h-4 mr-2 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
-                        <div>
+                        <div class="min-w-0 flex-1">
                             <div class="text-xs font-medium text-slate-800 whitespace-nowrap">ログイン中</div>
-                            <div class="text-xs text-slate-500 truncate max-w-24">${userEmail}</div>
+                            <div class="text-xs text-slate-500 truncate">${userEmail}</div>
                         </div>
                     </div>
-                    <button onclick="logout()" class="text-xs text-amber-600 hover:text-amber-700 px-1 py-0.5 rounded border border-amber-600 hover:bg-amber-50 whitespace-nowrap">
+                    <button id="logoutBtn" class="text-xs text-amber-600 hover:text-amber-700 px-2 py-1 rounded border border-amber-600 hover:bg-amber-50 whitespace-nowrap flex-shrink-0">
                         ログアウト
                     </button>
                 </div>
             `;
+            
+            // ログアウトボタンのイベントリスナーを追加
+            setTimeout(() => {
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        try {
+                            const firebaseModule = await import('./firebase-config.js');
+                            await firebaseModule.forceLogout();
+                        } catch (error) {
+                            console.error('ログアウトエラー:', error);
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.location.href = 'login.html';
+                        }
+                    });
+                }
+            }, 100);
         } else {
             // 未ログインの表示
             loginMenuItem.innerHTML = `
@@ -179,30 +199,31 @@ class NavigationManager {
     }
 }
 
-// ログアウト機能
-window.logout = function() {
-    // localStorageから認証情報を削除
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userEmail');
-    
-    // Firebase認証からもログアウト（Firebaseが利用可能な場合）
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().signOut().catch(error => {
-            console.error('Firebase ログアウトエラー:', error);
-        });
-    }
-    
-    // ログイン状態を更新
-    const navigationManager = window.navigationManager;
-    if (navigationManager) {
-        navigationManager.updateLoginStatus();
-    }
-    
-    // ログインページにリダイレクト
-    window.location.href = 'login.html';
-};
 
 // ページ読み込み時にナビゲーションを初期化
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     window.navigationManager = new NavigationManager();
+    
+    // Firebase認証状態の変化を監視
+    try {
+        const firebaseModule = await import('./firebase-config.js');
+        if (firebaseModule.auth) {
+            firebaseModule.auth.onAuthStateChanged((user) => {
+                if (window.navigationManager) {
+                    window.navigationManager.updateLoginStatus();
+                }
+            });
+        }
+    } catch (error) {
+        console.log('Firebase認証監視の初期化に失敗:', error);
+    }
+    
+    // localStorageの変化を監視
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'isLoggedIn' || e.key === 'userEmail') {
+            if (window.navigationManager) {
+                window.navigationManager.updateLoginStatus();
+            }
+        }
+    });
 });

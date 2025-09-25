@@ -28,7 +28,7 @@
         <div class="w-full bg-white min-h-screen">
             <!-- ナビゲーションヘッダー（動的に生成される） -->
             
-            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-16 pb-16">
+            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-20 pb-16">
                 <!-- ヘッダー -->
                 <div class="text-center mb-6">
                     <h1 class="text-lg sm:text-xl font-bold text-gray-800">会員登録（無料）</h1>
@@ -182,7 +182,7 @@
 
                 <!-- 登録ボタン -->
                 <div class="mt-6 sm:mt-8">
-                    <button id="registerBtn" class="btn bg-amber-600 hover:bg-amber-700 text-white btn-block border-0 text-sm sm:text-base" onclick="handleRegister()">
+                    <button id="registerBtn" class="btn bg-amber-600 hover:bg-amber-700 text-white btn-block border-0 text-sm sm:text-base" onclick="handleRegister()" disabled>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
@@ -219,8 +219,15 @@
                 const firebaseModule = await import('./firebase-config.js');
                 registerUser = firebaseModule.registerUser;
                 console.log('Firebase関数の読み込み完了');
+                
+                // 登録ボタンを有効化
+                const registerBtn = document.getElementById('registerBtn');
+                if (registerBtn) {
+                    registerBtn.disabled = false;
+                }
             } catch (error) {
                 console.error('Firebase関数の読み込みエラー:', error);
+                showError('Firebase関数の読み込みに失敗しました。ページを再読み込みしてください。');
             }
         }
         
@@ -230,8 +237,8 @@
         // 登録処理（グローバル関数として定義）
         window.handleRegister = function() {
             const email = document.querySelector('input[type="email"]').value;
-            const password = document.querySelector('input[type="password"]').value;
-            const confirmPassword = document.querySelectorAll('input[type="password"]')[1].value;
+            const password = document.getElementById('passwordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
             
             // エラーメッセージをクリア
             hideMessages();
@@ -259,13 +266,13 @@
             
             // Firebase関数が読み込まれているかチェック
             if (!registerUser) {
-                showError('Firebase関数が読み込まれていません。ページを再読み込みしてください。');
+                showError('Firebase関数が読み込まれていません。しばらく待ってから再度お試しください。');
                 registerBtn.disabled = false;
                 registerBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    会員登録する
+                    <span class="whitespace-nowrap">会員登録する</span>
                 `;
                 return;
             }
@@ -302,10 +309,10 @@
                     // 登録ボタンを有効化
                     registerBtn.disabled = false;
                     registerBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        会員登録する
+                        <span class="whitespace-nowrap">会員登録する</span>
                     `;
                 });
         }

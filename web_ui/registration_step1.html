@@ -28,23 +28,23 @@
         <div class="w-full bg-white min-h-screen">
             <!-- ナビゲーションヘッダー（動的に生成される） -->
             
-            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-16 pb-16 flex flex-col min-h-screen">
+            <div class="px-3 py-4 sm:px-4 sm:py-6 pt-20 pb-16 flex flex-col min-h-screen">
             <!-- ヘッダー -->
-            <div class="text-center mb-6">
-                <h1 class="text-lg sm:text-xl font-bold text-gray-800">レシート登録</h1>
-                <p class="text-xs sm:text-sm text-gray-600 mt-2">フォルダからのレシートを選択して追加</p>
+            <div class="text-center mb-8">
+                <h1 class="text-xl font-bold text-gray-800">レシート登録</h1>
+                <p class="text-sm text-gray-600 mt-3">フォルダからのレシートを選択して追加</p>
             </div>
             
             <!-- レシートアップロード -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
-                <div class="p-3 sm:p-4">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-1 mx-0">
+                <div class="p-2 sm:p-3">
                     <!-- レシートプレビューエリア -->
-                    <div id="previewContainer" class="border-2 border-dashed border-gray-300 rounded-lg h-96 sm:h-80 mb-6 sm:mb-8 flex items-center justify-center bg-gray-50">
+                    <div id="previewContainer" class="border-2 border-dashed border-gray-300 rounded-lg h-64 sm:h-80 mb-4 sm:mb-6 flex items-center justify-center bg-gray-50">
                         <div id="previewPlaceholder" class="text-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 sm:h-20 sm:w-20 mx-auto text-gray-400 mb-2 sm:mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 sm:h-20 sm:w-20 mx-auto text-gray-400 mb-1 sm:mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span class="text-gray-500 text-sm sm:text-base">レシート画像のプレビュー</span>
+                            <span class="text-gray-500 text-xs sm:text-base">レシート画像のプレビュー</span>
                         </div>
                         <img id="previewImage" class="hidden w-full h-full object-contain rounded-lg" alt="選択された画像">
                     </div>
@@ -56,15 +56,16 @@
                         </button>
                     </div>
                     
+                    
                     <!-- 隠しファイル入力 -->
                     <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
                 </div>
             </div>
 
-            <!-- ボタンエリア（最下部に固定） -->
-            <div class="mt-auto pt-6">
+            <!-- ボタンエリア（プレビューエリアの上部） -->
+            <div class="mt-24 sm:mt-28 mb-4">
                 <!-- 登録ボタン -->
-                <div class="pb-3 sm:pb-4">
+                <div class="text-center px-[10%] mb-6 sm:mb-8">
                     <button id="registerBtn" class="btn bg-amber-600 hover:bg-amber-700 text-white btn-block text-sm sm:text-base" onclick="handleRegistration()">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -74,7 +75,7 @@
                 </div>
                 
                 <!-- サマリー情報を見るボタン -->
-                <div class="text-center">
+                <div class="text-center px-[10%]">
                     <a href="registration_step3.html" class="btn btn-outline btn-sm text-xs sm:text-sm">
                         <span class="whitespace-nowrap">サマリー情報を見る</span>
                     </a>
@@ -96,6 +97,43 @@
         // Firebase関数を動的にインポート
         let firebaseFunctions = null;
         
+        // 認証状態を待つ関数
+        async function waitForAuth() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5秒間（100ms × 50回）
+                
+                const checkAuth = () => {
+                    attempts++;
+                    
+                    if (firebaseFunctions && firebaseFunctions.auth) {
+                        const user = firebaseFunctions.auth.currentUser;
+                        console.log(`認証確認試行 ${attempts}/${maxAttempts}:`, user ? user.email : '未認証');
+                        
+                        if (user) {
+                            console.log('認証確認完了:', user.email);
+                            resolve(true);
+                        } else if (attempts >= maxAttempts) {
+                            console.log('認証確認タイムアウト: 未認証');
+                            resolve(false);
+                        } else {
+                            // 認証状態がまだ確定していない場合、少し待って再試行
+                            setTimeout(checkAuth, 100);
+                        }
+                    } else {
+                        if (attempts >= maxAttempts) {
+                            console.log('Firebase関数読み込みタイムアウト');
+                            resolve(false);
+                        } else {
+                            // Firebase関数がまだ読み込まれていない場合、少し待って再試行
+                            setTimeout(checkAuth, 100);
+                        }
+                    }
+                };
+                checkAuth();
+            });
+        }
+
         // Firebase関数を読み込み
         async function loadFirebaseFunctions() {
             try {
@@ -106,7 +144,26 @@
                     auth: firebaseModule.auth
                 };
                 console.log('Firebase関数の読み込み完了');
-                updateUserInfo();
+                
+                // 認証状態を待ってからチェック
+                console.log('認証状態を待機中...');
+                const isAuthenticated = await waitForAuth();
+                
+                if (isAuthenticated) {
+                    console.log('認証済み、ページを継続');
+                    // ユーザー情報を更新
+                    updateUserInfo();
+                } else {
+                    console.log('未認証、認証チェックを実行');
+                    // 5秒待ってから認証チェックを実行
+                    setTimeout(() => {
+                        console.log('認証チェックを実行中...');
+                        if (!firebaseModule.checkPageAuth()) {
+                            console.log('認証チェック失敗');
+                            return; // 認証失敗時はリダイレクトされる
+                        }
+                    }, 5000);
+                }
             } catch (error) {
                 console.error('Firebase関数の読み込みエラー:', error);
             }
@@ -171,9 +228,45 @@
         }
         
         
-        // ステータスメッセージ表示（コンソールログに変更）
+        // ステータスメッセージ表示（登録ボタンの場所に表示）
         function showStatus(message, type = 'info') {
             console.log(`[${type.toUpperCase()}] ${message}`);
+            
+            const registerBtn = document.getElementById('registerBtn');
+            if (!registerBtn) return;
+            
+            // 先にスタイルを適用してから無効化
+            switch (type) {
+                case 'success':
+                    registerBtn.className = 'btn bg-green-700 hover:bg-green-800 text-white btn-block text-sm sm:text-base disabled:bg-green-700 disabled:text-white';
+                    registerBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="whitespace-nowrap">${message}</span>
+                    `;
+                    break;
+                case 'error':
+                    registerBtn.className = 'btn bg-red-500 hover:bg-red-600 text-white btn-block text-sm sm:text-base disabled:bg-red-500 disabled:text-white';
+                    registerBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span class="whitespace-nowrap">${message}</span>
+                    `;
+                    break;
+                case 'info':
+                default:
+                    registerBtn.className = 'btn bg-blue-200 hover:bg-blue-300 text-blue-800 btn-block text-sm sm:text-base disabled:bg-blue-200 disabled:text-blue-800';
+                    registerBtn.innerHTML = `
+                        <span class="loading loading-spinner loading-sm mr-1 sm:mr-2"></span>
+                        <span class="whitespace-nowrap">${message}</span>
+                    `;
+                    break;
+            }
+            
+            // 最後に無効化
+            registerBtn.disabled = true;
         }
         
         // 画像をBase64に変換
@@ -327,10 +420,9 @@
             
             const registerBtn = document.getElementById('registerBtn');
             registerBtn.disabled = true;
-            registerBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> 処理中...';
             
             try {
-                showStatus('画像をアップロード中...', 'info');
+                showStatus('画像アップロード中...', 'info');
                 
                 // 1. Firebase Storageに画像をアップロード（エラーハンドリング付き）
                 const receiptId = `receipt_${Date.now()}`;
@@ -345,7 +437,7 @@
                     imageUrl = 'upload_failed'; // プレースホルダー
                 }
                 
-                showStatus('画像を解析中...', 'info');
+                showStatus('生成AI解析中...', 'info');
                 
                 // 2. 画像をBase64に変換
                 const base64Image = await fileToBase64(selectedFile);
@@ -354,7 +446,7 @@
                 const geminiResponse = await analyzeImageWithGemini(base64Image);
                 console.log('Gemini解析完了:', geminiResponse);
                 
-                showStatus('データを保存中...', 'info');
+                showStatus('データベース仮登録中...', 'info');
                 
                 // 4. JSONデータを生成
                 const receiptData = generateReceiptJson(geminiResponse);
@@ -368,7 +460,7 @@
                 localStorage.setItem('currentReceiptAnalysis', JSON.stringify(receiptData));
                 console.log('localStorageに保存完了');
                 
-                showStatus('分析完了！確認画面に移動します...', 'success');
+                showStatus('登録完了！確認画面へ自動で遷移します。', 'success');
                 
                 // 7. 3秒後に次の画面に遷移
                 setTimeout(() => {
@@ -378,13 +470,14 @@
             } catch (error) {
                 console.error('登録エラー:', error);
                 showStatus(`エラー: ${error.message}`, 'error');
-            } finally {
+                
+                // エラー時のみボタンをリセット
                 registerBtn.disabled = false;
                 registerBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-xs">登録</span>
+                    <span class="whitespace-nowrap">登録</span>
                 `;
             }
         };
