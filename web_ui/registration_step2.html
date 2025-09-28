@@ -29,17 +29,6 @@
             <div class="text-center mb-6">
             </div>
 
-            <!-- デバッグツール -->
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                <h3 class="text-sm font-medium text-yellow-800 mb-2">デバッグツール</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="debugLocalStorage()" class="btn btn-xs btn-outline">localStorage確認</button>
-                    <button onclick="loadReceiptFromLocalStorage()" class="btn btn-xs btn-outline">手動読み込み</button>
-                    <button onclick="setTestData()" class="btn btn-xs btn-outline">テストデータ設定</button>
-                    <button onclick="clearLocalStorage()" class="btn btn-xs btn-outline">localStorageクリア</button>
-                </div>
-            </div>
-            
             <!-- 現在のレシート -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
                 <div class="p-4" id="receiptContent">
@@ -76,12 +65,12 @@
                             <div class="flex justify-between text-sm">
                                 <span class="text-gray-600">カテゴリ:</span>
                                 <select class="select select-bordered select-xs border-gray-300 w-20 text-xs">
-                                    <option value="food">食費</option>
-                                    <option value="transport">交通費</option>
-                                    <option value="shopping">お買い物</option>
-                                    <option value="entertainment">娯楽</option>
-                                    <option value="accommodation">宿泊費</option>
-                                    <option value="other">その他</option>
+                                    <option value="食費">食費</option>
+                                    <option value="交通費">交通費</option>
+                                    <option value="買い物">買い物</option>
+                                    <option value="娯楽">娯楽</option>
+                                    <option value="宿泊費">宿泊費</option>
+                                    <option value="その他">その他</option>
                                 </select>
                             </div>
                         </div>
@@ -541,7 +530,6 @@
                 <div class="text-center py-8">
                     <div class="loading loading-spinner loading-lg text-blue-600 mb-4"></div>
                     <p class="text-gray-600">${message}</p>
-                    <p class="text-xs text-gray-500 mt-2">Firebase接続を確認しています</p>
                     <button onclick="location.reload()" class="btn btn-outline btn-sm mt-4">
                         ページをリロード
                     </button>
@@ -1270,12 +1258,12 @@
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">カテゴリ:</span>
                     <select class="select select-bordered select-xs border-gray-300 w-20 text-xs" id="categorySelect">
-                        <option value="food" ${category === 'food' ? 'selected' : ''}>食費</option>
-                        <option value="transport" ${category === 'transport' ? 'selected' : ''}>交通費</option>
-                        <option value="shopping" ${category === 'shopping' ? 'selected' : ''}>お買い物</option>
-                        <option value="entertainment" ${category === 'entertainment' ? 'selected' : ''}>娯楽</option>
-                        <option value="accommodation" ${category === 'accommodation' ? 'selected' : ''}>宿泊費</option>
-                        <option value="other" ${category === 'other' ? 'selected' : ''}>その他</option>
+                        <option value="食費" ${category === '食費' ? 'selected' : ''}>食費</option>
+                        <option value="交通費" ${category === '交通費' ? 'selected' : ''}>交通費</option>
+                        <option value="買い物" ${category === '買い物' ? 'selected' : ''}>買い物</option>
+                        <option value="娯楽" ${category === '娯楽' ? 'selected' : ''}>娯楽</option>
+                        <option value="宿泊費" ${category === '宿泊費' ? 'selected' : ''}>宿泊費</option>
+                        <option value="その他" ${category === 'その他' ? 'selected' : ''}>その他</option>
                     </select>
                 </div>
             `;
@@ -1310,11 +1298,11 @@
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">カテゴリ:</span>
                     <select class="select select-bordered select-xs border-gray-300 w-20 text-xs">
-                        <option value="food" selected>食費</option>
-                        <option value="transport">交通費</option>
-                        <option value="shopping">お買い物</option>
-                        <option value="entertainment">娯楽</option>
-                        <option value="other">その他</option>
+                        <option value="食費" selected>食費</option>
+                        <option value="交通費">交通費</option>
+                        <option value="買い物">買い物</option>
+                        <option value="娯楽">娯楽</option>
+                        <option value="その他">その他</option>
                     </select>
                 </div>
             `;
@@ -1431,73 +1419,6 @@
             currentReceipts = [receiptData];
             currentIndex = 0;
         }
-        
-        // デバッグ関数をグローバルスコープで定義
-        window.debugLocalStorage = function() {
-            console.log('=== localStorage デバッグ情報 ===');
-            const analysisData = localStorage.getItem('currentReceiptAnalysis');
-            console.log('currentReceiptAnalysis:', analysisData);
-            
-            if (analysisData) {
-                try {
-                    const parsed = JSON.parse(analysisData);
-                    console.log('解析されたデータ:', parsed);
-                    console.log('extracted_data:', parsed.extracted_data);
-                    console.log('storeName:', parsed.extracted_data?.storeName);
-                    console.log('date:', parsed.extracted_data?.date);
-                    console.log('currency:', parsed.extracted_data?.currency);
-                    console.log('totalAmount:', parsed.extracted_data?.totalAmount);
-                    console.log('jpyAmount:', parsed.extracted_data?.jpyAmount);
-                    console.log('location:', parsed.extracted_data?.location);
-                    console.log('category:', parsed.extracted_data?.category);
-                    
-                    alert('localStorageにデータがあります。コンソールを確認してください。');
-                } catch (error) {
-                    console.error('JSON解析エラー:', error);
-                    alert('JSON解析エラー: ' + error.message);
-                }
-            } else {
-                console.log('localStorageにデータがありません');
-                alert('localStorageにデータがありません');
-            }
-        };
-        
-        window.clearLocalStorage = function() {
-            localStorage.removeItem('currentReceiptAnalysis');
-            console.log('localStorageをクリアしました');
-            alert('localStorageをクリアしました');
-            location.reload();
-        };
-        
-        window.setTestData = function() {
-            const testData = {
-                receipt_id: 'test_receipt_001',
-                image_url: 'test_image_url',
-                extracted_data: {
-                    storeName: 'テスト店舗',
-                    date: '2024-01-15',
-                    currency: 'MYR',
-                    totalAmount: 25.50,
-                    location: 'クアラルンプール',
-                    category: 'food',
-                    jpyAmount: 850,
-                    original_text: 'テストレシート',
-                    translated_text: 'テストレシート'
-                },
-                processed_at: new Date().toISOString(),
-                confidence: 0.95
-            };
-            
-            localStorage.setItem('currentReceiptAnalysis', JSON.stringify(testData));
-            console.log('テストデータを設定しました:', testData);
-            alert('テストデータを設定しました。手動読み込みボタンをクリックしてください。');
-        };
-        
-        window.loadReceiptFromLocalStorage = function() {
-            loadReceiptFromLocalStorage();
-        };
-        
-        // テストデータ設定関数
         
         // DOMContentLoadedイベントでlocalStorageから読み込み
         document.addEventListener('DOMContentLoaded', function() {
