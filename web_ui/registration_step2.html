@@ -29,6 +29,16 @@
             <div class="text-center mb-6">
             </div>
 
+            <!-- デバッグツール -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <h3 class="text-sm font-medium text-yellow-800 mb-2">デバッグツール</h3>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="debugLocalStorage()" class="btn btn-xs btn-outline">localStorage確認</button>
+                    <button onclick="loadReceiptFromLocalStorage()" class="btn btn-xs btn-outline">手動読み込み</button>
+                    <button onclick="setTestData()" class="btn btn-xs btn-outline">テストデータ設定</button>
+                    <button onclick="clearLocalStorage()" class="btn btn-xs btn-outline">localStorageクリア</button>
+                </div>
+            </div>
             
             <!-- 現在のレシート -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
@@ -1172,8 +1182,10 @@
             // 即座にチェック開始（遅延を削除）
             checkFirebaseFunctions();
             
-            // localStorageから分析結果を読み込み
-            loadReceiptFromLocalStorage();
+            // localStorageから分析結果を読み込み（少し遅延）
+            setTimeout(() => {
+                loadReceiptFromLocalStorage();
+            }, 500);
         });
         
         // DOMContentLoadedイベントでも実行
@@ -1184,58 +1196,77 @@
         });
         
         
-        // レシート情報を表示
+        // レシート情報を表示（超シンプル版）
         function displayReceiptInfo(receipt) {
-            console.log('displayReceiptInfo関数が呼び出されました');
             const receiptInfoDiv = document.getElementById('receiptInfo');
-            console.log('receiptInfoDiv要素:', receiptInfoDiv);
-            
             if (!receiptInfoDiv) {
                 console.error('receiptInfoDiv要素が見つかりません');
                 return;
             }
             
-            const extractedData = receipt.extracted_data;
-            console.log('抽出されたデータ:', extractedData);
-            console.log('画像URL:', receipt.image_url);
+            // localStorageに保存されたデータをそのまま表示
+            console.log('受信したレシートデータ:', receipt);
             
-            // 編集されたデータを優先して表示（extracted_dataと直接プロパティの両方をチェック）
-            const storeName = receipt.store?.name || extractedData.storeName || 'Unknown Store';
-            const date = receipt.transaction?.date || receipt.date || extractedData.date || 'Unknown Date';
-            const currency = receipt.transaction?.currency || receipt.currency || extractedData.currency || '';
-            const totalAmount = receipt.transaction?.amount || receipt.totalAmount || extractedData.totalAmount || '0';
-            const jpyAmount = receipt.jpyAmount || extractedData.jpyAmount || 0;
-            const location = receipt.store?.location || extractedData.location || 'Unknown Location';
-            const category = receipt.category || extractedData.category || 'other';
+            // データを取得（複数の可能性をチェック）
+            const storeName = receipt.extracted_data?.storeName || 
+                             receipt.store?.name || 
+                             receipt.storeName || 
+                             'Unknown Store';
             
-            console.log('表示用データ:', { storeName, date, currency, totalAmount, jpyAmount, location, category });
+            const date = receipt.extracted_data?.date || 
+                        receipt.transaction?.date || 
+                        receipt.date || 
+                        'Unknown Date';
+            
+            const currency = receipt.extracted_data?.currency || 
+                            receipt.transaction?.currency || 
+                            receipt.currency || 
+                            'JPY';
+            
+            const totalAmount = receipt.extracted_data?.totalAmount || 
+                               receipt.transaction?.amount || 
+                               receipt.totalAmount || 
+                               0;
+            
+            const jpyAmount = receipt.extracted_data?.jpyAmount || 
+                              receipt.transaction?.jpyAmount || 
+                              receipt.jpyAmount || 
+                              receipt.extracted_data?.total_jpy || 
+                              0;
+            
+            const location = receipt.extracted_data?.location || 
+                            receipt.store?.location || 
+                            'Unknown Location';
+            
+            const category = receipt.extracted_data?.category || 
+                            receipt.category || 
+                            'food';
             
             receiptInfoDiv.innerHTML = `
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">店舗名:</span>
                     <span class="font-medium text-gray-800">${storeName}</span>
                 </div>
-                
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">日付:</span>
                     <span class="font-medium text-gray-800">${date}</span>
                 </div>
-                
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">通貨:</span>
+                    <span class="font-medium text-gray-800">${currency}</span>
+                </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">金額:</span>
-                    <span class="font-medium text-gray-800">${currency} ${totalAmount}</span>
+                    <span class="font-medium text-gray-800">${totalAmount}</span>
                 </div>
-                
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">日本円換算:</span>
-                    <span class="font-medium text-blue-600">¥ ${Math.round(jpyAmount)}</span>
+                    <span class="font-medium text-gray-800">¥${jpyAmount}</span>
                 </div>
-                
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">場所:</span>
                     <span class="font-medium text-gray-800">${location}</span>
                 </div>
-                
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">カテゴリ:</span>
                     <select class="select select-bordered select-xs border-gray-300 w-20 text-xs" id="categorySelect">
@@ -1291,7 +1322,7 @@
         
         // localStorageから分析結果を読み込み
         function loadReceiptFromLocalStorage(retryCount = 0) {
-            console.log('localStorageから分析結果を読み込み中...');
+            console.log(`localStorageから分析結果を読み込み中... (試行回数: ${retryCount})`);
             
             const analysisData = localStorage.getItem('currentReceiptAnalysis');
             if (!analysisData) {
@@ -1308,97 +1339,22 @@
                 currentReceipts = [receiptData];
                 currentIndex = 0;
                 
-                // ローディング表示はそのまま保持
-                
-                // DOM要素の存在確認（詳細デバッグ）
-                console.log('DOM要素の存在確認中...');
-                console.log('document.readyState:', document.readyState);
-                console.log('document.body:', document.body);
-                
+                // DOM要素の存在確認
                 const receiptInfoDiv = document.getElementById('receiptInfo');
-                console.log('receiptInfo要素:', receiptInfoDiv);
+                const receiptContentElement = document.getElementById('receiptContent');
                 
-                if (!receiptInfoDiv) {
-                    // すべての要素を確認
-                    const allElements = document.querySelectorAll('*');
-                    console.log('ページ内の全要素数:', allElements.length);
-                    
-                    // すべてのIDを持つ要素を確認
-                    const allIds = document.querySelectorAll('[id]');
-                    console.log('IDを持つ要素:', Array.from(allIds).map(el => el.id));
-                    
-                    const receiptContent = document.getElementById('receiptContent');
-                    console.log('receiptContent要素:', receiptContent);
-                    
-                    if (receiptContent) {
-                        console.log('receiptContentの子要素:', receiptContent.children);
-                        console.log('receiptContentのHTML:', receiptContent.innerHTML);
-                    }
-                    
-                    // 直接セレクターで確認
-                    const receiptInfoDirect = document.querySelector('#receiptInfo');
-                    console.log('直接セレクターでのreceiptInfo:', receiptInfoDirect);
-                    
-                    // receiptInfo要素が見つからない場合、動的に作成
-                    console.log('receiptInfo要素が見つからないため、動的に作成します');
-                    
-                    // receiptContent要素を探す
-                    const receiptContentElement = document.getElementById('receiptContent');
-                    if (!receiptContentElement) {
-                        console.error('receiptContent要素も見つかりません');
-                        showErrorMessage('ページの構造に問題があります。ページを再読み込みしてください。');
+                if (!receiptInfoDiv || !receiptContentElement) {
+                    if (retryCount < 5) {
+                        console.log(`DOM要素が見つかりません。${1000}ms後に再試行します (${retryCount + 1}/5)`);
+                        setTimeout(() => {
+                            loadReceiptFromLocalStorage(retryCount + 1);
+                        }, 1000);
+                        return;
+                    } else {
+                        console.log('DOM要素が見つからないため、動的に作成します');
+                        createReceiptInfoDynamically(receiptData);
                         return;
                     }
-                    
-                    // receiptContentの内容をクリアして、シンプルな構造で再作成
-                    receiptContentElement.innerHTML = '';
-                    
-                    // レシート情報
-                    const receiptInfoDiv = document.createElement('div');
-                    receiptInfoDiv.id = 'receiptInfo';
-                    receiptInfoDiv.className = 'space-y-3';
-                    
-                    const extractedData = receiptData.extracted_data;
-                    receiptInfoDiv.innerHTML = `
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">店舗名:</span>
-                            <span class="font-medium text-gray-800">${extractedData.storeName || 'Unknown Store'}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">日付:</span>
-                            <span class="font-medium text-gray-800">${extractedData.date || 'Unknown Date'}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">金額:</span>
-                            <span class="font-medium text-gray-800">${extractedData.currency || ''} ${extractedData.totalAmount || '0'}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">日本円換算:</span>
-                            <span class="font-medium text-blue-600">¥ ${Math.round(extractedData.jpyAmount || 0)}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">場所:</span>
-                            <span class="font-medium text-gray-800">${extractedData.location || 'Unknown Location'}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">カテゴリ:</span>
-                            <select class="select select-bordered select-xs border-gray-300 w-20 text-xs" id="categorySelect">
-                                <option value="food" ${extractedData.category === 'food' ? 'selected' : ''}>食費</option>
-                                <option value="transport" ${extractedData.category === 'transport' ? 'selected' : ''}>交通費</option>
-                                <option value="shopping" ${extractedData.category === 'shopping' ? 'selected' : ''}>お買い物</option>
-                                <option value="entertainment" ${extractedData.category === 'entertainment' ? 'selected' : ''}>娯楽</option>
-                                <option value="accommodation" ${extractedData.category === 'accommodation' ? 'selected' : ''}>宿泊費</option>
-                                <option value="other" ${extractedData.category === 'other' ? 'selected' : ''}>その他</option>
-                            </select>
-                        </div>
-                    `;
-                    
-                    // receiptContentに追加
-                    receiptContentElement.appendChild(receiptInfoDiv);
-                    console.log('receiptContentをクリアして、レシート情報のみで再作成しました');
-                    
-                    console.log('localStorageからの読み込み完了');
-                    return;
                 }
                 
                 // レシート情報を表示
@@ -1411,6 +1367,135 @@
             }
         }
         
+        // DOM要素を動的に作成する関数
+        function createReceiptInfoDynamically(receiptData) {
+            const receiptContentElement = document.getElementById('receiptContent');
+            if (!receiptContentElement) {
+                console.error('receiptContent要素も見つかりません');
+                showErrorMessage('ページの構造に問題があります。ページを再読み込みしてください。');
+                return;
+            }
+            
+            // receiptContentの内容をクリアして、シンプルな構造で再作成
+            receiptContentElement.innerHTML = '';
+            
+            // レシート情報
+            const receiptInfoDiv = document.createElement('div');
+            receiptInfoDiv.id = 'receiptInfo';
+            receiptInfoDiv.className = 'space-y-3';
+            
+            const extractedData = receiptData.extracted_data || {};
+            receiptInfoDiv.innerHTML = `
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">店舗名:</span>
+                    <span class="font-medium text-gray-800">${extractedData.storeName || 'Unknown Store'}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">日付:</span>
+                    <span class="font-medium text-gray-800">${extractedData.date || 'Unknown Date'}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">通貨:</span>
+                    <span class="font-medium text-gray-800">${extractedData.currency || 'JPY'}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">金額:</span>
+                    <span class="font-medium text-gray-800">${extractedData.totalAmount || 0}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">日本円換算:</span>
+                    <span class="font-medium text-gray-800">¥${extractedData.jpyAmount || 0}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">場所:</span>
+                    <span class="font-medium text-gray-800">${extractedData.location || 'Unknown Location'}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">カテゴリ:</span>
+                    <select class="select select-bordered select-xs border-gray-300 w-20 text-xs" id="categorySelect">
+                        <option value="food" ${extractedData.category === 'food' ? 'selected' : ''}>食費</option>
+                        <option value="transport" ${extractedData.category === 'transport' ? 'selected' : ''}>交通費</option>
+                        <option value="shopping" ${extractedData.category === 'shopping' ? 'selected' : ''}>お買い物</option>
+                        <option value="entertainment" ${extractedData.category === 'entertainment' ? 'selected' : ''}>娯楽</option>
+                        <option value="accommodation" ${extractedData.category === 'accommodation' ? 'selected' : ''}>宿泊費</option>
+                        <option value="other" ${extractedData.category === 'other' ? 'selected' : ''}>その他</option>
+                    </select>
+                </div>
+            `;
+            
+            // receiptContentに追加
+            receiptContentElement.appendChild(receiptInfoDiv);
+            console.log('receiptInfo要素を動的に作成しました');
+            
+            // 単一のレシートとして処理
+            currentReceipts = [receiptData];
+            currentIndex = 0;
+        }
+        
+        // デバッグ関数をグローバルスコープで定義
+        window.debugLocalStorage = function() {
+            console.log('=== localStorage デバッグ情報 ===');
+            const analysisData = localStorage.getItem('currentReceiptAnalysis');
+            console.log('currentReceiptAnalysis:', analysisData);
+            
+            if (analysisData) {
+                try {
+                    const parsed = JSON.parse(analysisData);
+                    console.log('解析されたデータ:', parsed);
+                    console.log('extracted_data:', parsed.extracted_data);
+                    console.log('storeName:', parsed.extracted_data?.storeName);
+                    console.log('date:', parsed.extracted_data?.date);
+                    console.log('currency:', parsed.extracted_data?.currency);
+                    console.log('totalAmount:', parsed.extracted_data?.totalAmount);
+                    console.log('jpyAmount:', parsed.extracted_data?.jpyAmount);
+                    console.log('location:', parsed.extracted_data?.location);
+                    console.log('category:', parsed.extracted_data?.category);
+                    
+                    alert('localStorageにデータがあります。コンソールを確認してください。');
+                } catch (error) {
+                    console.error('JSON解析エラー:', error);
+                    alert('JSON解析エラー: ' + error.message);
+                }
+            } else {
+                console.log('localStorageにデータがありません');
+                alert('localStorageにデータがありません');
+            }
+        };
+        
+        window.clearLocalStorage = function() {
+            localStorage.removeItem('currentReceiptAnalysis');
+            console.log('localStorageをクリアしました');
+            alert('localStorageをクリアしました');
+            location.reload();
+        };
+        
+        window.setTestData = function() {
+            const testData = {
+                receipt_id: 'test_receipt_001',
+                image_url: 'test_image_url',
+                extracted_data: {
+                    storeName: 'テスト店舗',
+                    date: '2024-01-15',
+                    currency: 'MYR',
+                    totalAmount: 25.50,
+                    location: 'クアラルンプール',
+                    category: 'food',
+                    jpyAmount: 850,
+                    original_text: 'テストレシート',
+                    translated_text: 'テストレシート'
+                },
+                processed_at: new Date().toISOString(),
+                confidence: 0.95
+            };
+            
+            localStorage.setItem('currentReceiptAnalysis', JSON.stringify(testData));
+            console.log('テストデータを設定しました:', testData);
+            alert('テストデータを設定しました。手動読み込みボタンをクリックしてください。');
+        };
+        
+        window.loadReceiptFromLocalStorage = function() {
+            loadReceiptFromLocalStorage();
+        };
         
         // テストデータ設定関数
         
@@ -1420,7 +1505,7 @@
             setTimeout(function() {
                 console.log('setTimeoutで実行中...');
                 loadReceiptFromLocalStorage();
-            }, 100);
+            }, 1000); // 1秒に延長
         });
     </script>
     
@@ -1438,7 +1523,7 @@
                     // 関数が見つからない場合は、既にメインスクリプトで実行済みの可能性がある
                     // エラーを出さずに処理を終了
                 }
-            }, 500);
+            }, 1500); // 1.5秒に延長
         });
     </script>
 </body>

@@ -1,11 +1,13 @@
 "use strict";
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertCurrency = exports.analyzeReceipt = void 0;
 const functions = require("firebase-functions");
 const generative_ai_1 = require("@google/generative-ai");
-// Gemini API の初期化
-const genAI = new generative_ai_1.GoogleGenerativeAI(((_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.api_key) || process.env.GEMINI_API_KEY || '');
+const app_1 = require("firebase-admin/app");
+// Firebase Admin SDK を初期化
+(0, app_1.initializeApp)();
+// Gemini API の初期化（新しいAPIキーを使用）
+const genAI = new generative_ai_1.GoogleGenerativeAI('AQ.Ab8RN6LhE-nMN_Nui3RcNUGPZ9wBoYyyKuVRjGLTQXRsVhslLA');
 // レシート分析関数
 exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
     try {
@@ -17,8 +19,11 @@ exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
         if (!imageBase64) {
             throw new functions.https.HttpsError('invalid-argument', '画像データが必要です');
         }
-        // Gemini Pro Vision モデルを取得
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        // 利用可能なモデルを確認
+        console.log('GoogleGenerativeAI インスタンス:', genAI);
+        console.log('利用可能なメソッド:', Object.getOwnPropertyNames(genAI));
+        // Gemini Pro Vision モデルを取得（古いバージョンを使用）
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
         // レシート分析のプロンプト
         const prompt = `
     このレシート画像を分析して、以下の情報をJSON形式で抽出してください：
@@ -43,6 +48,8 @@ exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
       "date": "2024-01-01",
       "currency": "JPY",
       "totalAmount": 1000,
+      "jpyAmount": 1000,
+      "exchangeRate": 1.0,
       "location": "東京, 日本",
       "items": [
         {"name": "商品名", "price": 500},
@@ -50,6 +57,12 @@ exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
       ],
       "category": "food"
     }
+
+    注意：
+    - jpyAmount: 日本円換算額（通貨がJPYでない場合は、現在の為替レートで日本円に換算してください）
+    - exchangeRate: 使用した為替レート（1通貨あたりの日本円）
+    - 通貨がJPYの場合は jpyAmount = totalAmount, exchangeRate = 1.0
+    - 外国通貨の場合は、現在の為替レートを使用して正確な日本円換算額を計算してください
     `;
         // Gemini API を呼び出し
         const result = await model.generateContent([
@@ -85,29 +98,45 @@ exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
                 category: 'other'
             };
         }
-        // 日本円換算を計算
-        const exchangeRates = {
-            'JPY': 1,
-            'USD': 150,
-            'EUR': 160,
-            'GBP': 190,
-            'AUD': 100,
-            'CAD': 110,
-            'CHF': 170,
-            'CNY': 20,
-            'KRW': 0.11,
-            'SGD': 110,
-            'THB': 4.2,
-            'MYR': 32,
-            'IDR': 0.01,
-            'PHP': 2.7,
-            'VND': 0.006,
-            'INR': 1.8
-        };
-        const jpyAmount = Math.round(analysis.totalAmount * (exchangeRates[analysis.currency] || 1));
+        // Geminiが計算した日本円換算額を使用
+        // もしGeminiが計算していない場合は、フォールバック処理
+        let jpyAmount = analysis.jpyAmount;
+        let exchangeRate = analysis.exchangeRate;
+        if (!jpyAmount || jpyAmount === 0) {
+            // フォールバック: 手動計算（Geminiが換算に失敗した場合）
+            const exchangeRates = {
+                'JPY': 1,
+                'USD': 150,
+                'EUR': 160,
+                'GBP': 190,
+                'AUD': 100,
+                'CAD': 110,
+                'CHF': 170,
+                'CNY': 20,
+                'KRW': 0.11,
+                'SGD': 110,
+                'THB': 4.2,
+                'MYR': 32,
+                'IDR': 0.01,
+                'PHP': 2.7,
+                'VND': 0.006,
+                'INR': 1.8
+            };
+            if (exchangeRates[analysis.currency]) {
+                // 対応通貨の場合
+                exchangeRate = exchangeRates[analysis.currency];
+                jpyAmount = Math.round(analysis.totalAmount * exchangeRate);
+            }
+            else {
+                // 非対応通貨の場合
+                console.warn(`未対応通貨のため日本円換算をスキップ: ${analysis.currency} ${analysis.totalAmount}`);
+                exchangeRate = 1;
+                jpyAmount = analysis.totalAmount; // 元金額をそのまま表示
+            }
+        }
         return {
             success: true,
-            analysis: Object.assign(Object.assign({}, analysis), { jpyAmount: jpyAmount })
+            analysis: Object.assign(Object.assign({}, analysis), { jpyAmount: jpyAmount, exchangeRate: exchangeRate })
         };
     }
     catch (error) {

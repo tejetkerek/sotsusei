@@ -1,8 +1,12 @@
 import * as functions from 'firebase-functions';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { initializeApp } from 'firebase-admin/app';
 
-// Gemini API の初期化
-const genAI = new GoogleGenerativeAI(functions.config().gemini?.api_key || process.env.GEMINI_API_KEY || '');
+// Firebase Admin SDK を初期化
+initializeApp();
+
+// Gemini API の初期化（新しいAPIキーを使用）
+const genAI = new GoogleGenerativeAI('AQ.Ab8RN6LhE-nMN_Nui3RcNUGPZ9wBoYyyKuVRjGLTQXRsVhslLA');
 
 // レシート分析関数
 export const analyzeReceipt = functions.https.onCall(async (data, context) => {
@@ -18,8 +22,12 @@ export const analyzeReceipt = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('invalid-argument', '画像データが必要です');
     }
 
-    // Gemini Pro Vision モデルを取得
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // 利用可能なモデルを確認
+    console.log('GoogleGenerativeAI インスタンス:', genAI);
+    console.log('利用可能なメソッド:', Object.getOwnPropertyNames(genAI));
+    
+    // Gemini Pro Vision モデルを取得（古いバージョンを使用）
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     // レシート分析のプロンプト
     const prompt = `

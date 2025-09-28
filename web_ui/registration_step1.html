@@ -254,6 +254,18 @@
                         </svg>
                         <span class="whitespace-nowrap">${message}</span>
                     `;
+                    
+                    // エラーメッセージは5秒間表示
+                    setTimeout(() => {
+                        registerBtn.disabled = false;
+                        registerBtn.className = 'btn bg-blue-600 hover:bg-blue-700 text-white btn-block text-sm sm:text-base';
+                        registerBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span class="whitespace-nowrap">登録</span>
+                        `;
+                    }, 5000);
                     break;
                 case 'info':
                 default:
@@ -306,22 +318,28 @@
             } catch (error) {
                 console.error('Firebase Functions エラー:', error);
                 
-                // フォールバック: モックデータを使用
-                console.log('Firebase Functions が利用できません。モックデータを使用します。');
-                return {
-                    text: "RED ELEPHANT\n123 Jalan Bukit Bintang\nKuala Lumpur, Malaysia\n\nKao Mun Gai Chicken White Rice\nRM 15.90\n\nTax: RM 0.00\nTotal: RM 15.90\n\nThank you for your visit!\nDate: 2024-01-15\nTime: 14:30",
-                    confidence: 0.95
-                };
+                // エラーを再投げして、呼び出し元で適切にハンドリング
+                throw new Error(`レシート分析に失敗しました: ${error.message}`);
             }
         }
         
         // Firebase Functionsの分析結果からJSONデータを生成
-        function generateReceiptJson(geminiResponse) {
+        function generateReceiptJson(geminiResponse, imageUrl, receiptId) {
+            console.log('generateReceiptJson呼び出し:', geminiResponse);
+            console.log('geminiResponse.analysis:', geminiResponse.analysis);
+            
             // Firebase Functionsから直接分析結果が返ってくる場合
             if (geminiResponse.analysis) {
+                console.log('analysisオブジェクトを使用');
                 const analysis = geminiResponse.analysis;
-                return {
-                    receipt_id: `receipt_${Date.now()}`,
+                console.log('analysis詳細:', analysis);
+                console.log('storeName:', analysis.storeName);
+                console.log('date:', analysis.date);
+                console.log('currency:', analysis.currency);
+                console.log('totalAmount:', analysis.totalAmount);
+                const result = {
+                    receipt_id: receiptId || `receipt_${Date.now()}`,
+                    image_url: imageUrl || '',
                     extracted_data: {
                         original_text: geminiResponse.text,
                         translated_text: geminiResponse.text,
@@ -342,21 +360,47 @@
                     processed_at: new Date().toISOString(),
                     confidence: geminiResponse.confidence || 0.95
                 };
+                
+                console.log('生成されたresult:', result);
+                console.log('result.extracted_data:', result.extracted_data);
+                return result;
             }
             
             // フォールバック: テキストから解析
+            console.log('フォールバック処理を使用');
             const text = geminiResponse.text;
+            const totalAmount = parseFloat(extractTotalAmount(text).replace(/[^\d.]/g, '')) || 0;
+            const currency = extractCurrency(text);
+            const jpyAmount = totalAmount * 32.0; // デフォルトレート
+            
+            console.log('フォールバック解析結果:', {
+                storeName: extractStoreName(text),
+                date: extractDate(text),
+                currency: currency,
+                totalAmount: totalAmount,
+                location: extractLocation(text),
+                jpyAmount: jpyAmount
+            });
+            
             return {
-                receipt_id: `receipt_${Date.now()}`,
+                receipt_id: receiptId || `receipt_${Date.now()}`,
+                image_url: imageUrl || '',
                 extracted_data: {
                     original_text: text,
                     translated_text: text,
+                    storeName: extractStoreName(text),
+                    date: extractDate(text),
+                    currency: currency,
+                    totalAmount: totalAmount,
+                    location: extractLocation(text),
+                    category: 'food', // デフォルト
+                    jpyAmount: jpyAmount,
                     conversions: [{
-                        original_currency: extractCurrency(text),
-                        original_amount: parseFloat(extractTotalAmount(text).replace(/[^\d.]/g, '')) || 0,
+                        original_currency: currency,
+                        original_amount: totalAmount,
                         exchange_rate: 32.0 // デフォルト
                     }],
-                    total_jpy: parseFloat(extractTotalAmount(text).replace(/[^\d.]/g, '')) * 32.0 || 0
+                    total_jpy: jpyAmount
                 },
                 processed_at: new Date().toISOString(),
                 confidence: geminiResponse.confidence || 0.95
@@ -397,8 +441,16 @@
         }
         
         function extractCurrency(text) {
-            const currencyMatch = text.match(/([A-Z$€¥£])\d+\.?\d*/);
-            return currencyMatch ? currencyMatch[1] : 'JPY';
+            const currencyMatch = text.match(/([A-Z$€¥£]\d+\.?\d*)/);
+            if (currencyMatch) {
+                const amount = currencyMatch[0];
+                if (amount.includes('$')) return 'USD';
+                if (amount.includes('€')) return 'EUR';
+                if (amount.includes('¥')) return 'JPY';
+                if (amount.includes('£')) return 'GBP';
+                if (amount.includes('RM')) return 'MYR';
+            }
+            return 'JPY'; // デフォルト
         }
         
         function extractLocation(text) {
@@ -449,9 +501,7 @@
                 showStatus('データベース仮登録中...', 'info');
                 
                 // 4. JSONデータを生成
-                const receiptData = generateReceiptJson(geminiResponse);
-                receiptData.image_url = imageUrl;
-                receiptData.receipt_id = receiptId;
+                const receiptData = generateReceiptJson(geminiResponse, imageUrl, receiptId);
                 
                 console.log('生成されたJSON:', receiptData);
                 
@@ -469,7 +519,21 @@
                 
             } catch (error) {
                 console.error('登録エラー:', error);
-                showStatus(`エラー: ${error.message}`, 'error');
+                
+                // エラーメッセージを分かりやすく表示
+                let errorMessage = 'レシートの登録に失敗しました';
+                if (error.message.includes('レシート分析に失敗しました')) {
+                    errorMessage = 'レシートの解析に失敗しました。画像を確認して再度お試しください。';
+                } else if (error.message.includes('認証')) {
+                    errorMessage = 'ログインが必要です。ログイン画面に移動します。';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else if (error.message.includes('画像')) {
+                    errorMessage = '画像のアップロードに失敗しました。ファイル形式を確認してください。';
+                }
+                
+                showStatus(errorMessage, 'error');
                 
                 // エラー時のみボタンをリセット
                 registerBtn.disabled = false;
