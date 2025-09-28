@@ -5,8 +5,8 @@ import { initializeApp } from 'firebase-admin/app';
 // Firebase Admin SDK を初期化
 initializeApp();
 
-// Gemini API の初期化（新しいAPIキーを使用）
-const genAI = new GoogleGenerativeAI('AQ.Ab8RN6LhE-nMN_Nui3RcNUGPZ9wBoYyyKuVRjGLTQXRsVhslLA');
+// Gemini API の初期化（環境変数からAPIキーを取得）
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 // レシート分析関数
 export const analyzeReceipt = functions.https.onCall(async (data, context) => {
@@ -26,8 +26,8 @@ export const analyzeReceipt = functions.https.onCall(async (data, context) => {
     console.log('GoogleGenerativeAI インスタンス:', genAI);
     console.log('利用可能なメソッド:', Object.getOwnPropertyNames(genAI));
     
-    // Gemini Pro Vision モデルを取得（古いバージョンを使用）
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    // Gemini 2.5 Flash モデルを取得
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // レシート分析のプロンプト
     const prompt = `

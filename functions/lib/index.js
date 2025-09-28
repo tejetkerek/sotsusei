@@ -6,8 +6,8 @@ const generative_ai_1 = require("@google/generative-ai");
 const app_1 = require("firebase-admin/app");
 // Firebase Admin SDK を初期化
 (0, app_1.initializeApp)();
-// Gemini API の初期化（新しいAPIキーを使用）
-const genAI = new generative_ai_1.GoogleGenerativeAI('AQ.Ab8RN6LhE-nMN_Nui3RcNUGPZ9wBoYyyKuVRjGLTQXRsVhslLA');
+// Gemini API の初期化（環境変数からAPIキーを取得）
+const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 // レシート分析関数
 exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
     try {
@@ -22,8 +22,8 @@ exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
         // 利用可能なモデルを確認
         console.log('GoogleGenerativeAI インスタンス:', genAI);
         console.log('利用可能なメソッド:', Object.getOwnPropertyNames(genAI));
-        // Gemini Pro Vision モデルを取得（古いバージョンを使用）
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        // Gemini 2.5 Flash モデルを取得
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         // レシート分析のプロンプト
         const prompt = `
     このレシート画像を分析して、以下の情報をJSON形式で抽出してください：
